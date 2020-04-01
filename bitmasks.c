@@ -70,6 +70,13 @@ void bmXor(Bitmask self, Bitmask other) {
     }
 }
 
+Bitmask nbmCopy(Bitmask self){
+    Bitmask new = bmCreate(self->len);
+    for(int k = self->len-1; k >= 0; k--) {
+        new->fields[k] = self->fields[k];
+    }
+    return new;
+}
 Bitmask nbmAnd(Bitmask b1, Bitmask b2){
     assert(b1->len == b2->len);
     Bitmask new = bmCreate(b1->len);

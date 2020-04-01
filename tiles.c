@@ -101,6 +101,8 @@ Bitmask tiCollapseTo(Context self, unsigned int tID, Block block) {
     Bitmask difference = self->tiles[tID].validBlockMask;
     self->tiles[tID].validBlockMask = block->fullMask;
     blbmRemove(block, difference);
+
+    self->rippleDifference = 
     return difference;
     /*
         difference = self.validBlockMask ^ block.bitMask

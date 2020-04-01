@@ -21,6 +21,7 @@ void bmXor(Bitmask self, Bitmask other);
 
 int* cherrypick(Bitmask self);
 
+Bitmask nbmCopy(Bitmask self);
 Bitmask nbmAnd(Bitmask b1, Bitmask b2);
 Bitmask nbmOr(Bitmask b1, Bitmask b2);
 Bitmask nbmXor(Bitmask b1, Bitmask b2);
