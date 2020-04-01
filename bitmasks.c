@@ -129,16 +129,22 @@ unsigned int * bmCherrypick(Bitmask self) {
     }
     return 0;
 }
-/*
-int main(int argc, char** argv){
-    Bitmask bm1 = bmCreate(3);
-    Bitmask bm2 = bmCreate(3);
 
-    bm1->fields[0] = 11;
-    bm1->fields[2] = 13;
+int * VLOOKUPS = { 0, 0, 1, 39, 2, 15, 40, 23, 3, 12, 16, 59, 41, 19, 24, 54, 4, 0, 13, 10, 17,
+62, 60, 28, 42, 30, 20, 51, 25, 44, 55, 47, 5, 32, 0, 38, 14, 22, 11, 58,
+18, 53, 63, 9, 61, 27, 29, 50, 43, 46, 31, 37, 21, 57, 52, 8, 26, 49, 45, 36,
+56, 7, 48, 35, 6, 0, 0 }
 
-    bmOr(bm1, bm2);
-    bmPrint(bm1);
-    printf("\n");
+unsigned int * bmFastCherrypick(Bitmask self){
+    unsigned int * output = malloc(sizeof(unsigned int) * (self->len * FIELD_LEN + 1));
+    int oLen = 1;
+    for(int k = self->len-1; self >= 0; self--) {
+        if (self->fields[k]) {
+            field rVal = ~(self->fields[k]-1);
+            self->fields[k] &= rVal;
+            output[oLen++] = VLOOKUPS[retVal % 67] + (FIELD_LEN * k);
+        }
+    }
+    output[0] = oLen;
+    return output;
 }
-*/
