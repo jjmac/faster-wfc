@@ -15,11 +15,13 @@ void bmPrint(Bitmask self);
 int bmFalse(Bitmask self);
 int bmTrue(Bitmask self);
 
+void bmClear(Bitmask self);
+void bmNot(Bitmask self);
 void bmAnd(Bitmask self, Bitmask other);
 void bmOr(Bitmask self, Bitmask other);
 void bmXor(Bitmask self, Bitmask other);
 
-int* cherrypick(Bitmask self);
+unsigned int bmCherrypick(Bitmask self);
 
 Bitmask nbmCopy(Bitmask self);
 Bitmask nbmAnd(Bitmask b1, Bitmask b2);

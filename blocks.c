@@ -114,6 +114,11 @@ void blbmAdd(Block self, Bitmask bm) {
 void blbmRemove(Block self, Bitmask bm) {
     bm->fields[self->fieldIndex] ^= self->localMask;
 }
+// TODO: improve efficiency??
+void blbmSet(Block self, Bitmask bm) {
+    bmClear(bm);
+    bm->fields[self->fieldIndex] |= self->localMask;
+}
 
 
 /*

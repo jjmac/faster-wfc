@@ -25,5 +25,6 @@ void blPrintData(Block self);
 // TODO: replace with macro??
 void blbmAdd(Block self, Bitmask bm);
 void blbmRemove(Block self, Bitmask bm);
+void blbmSet(Block self, Bitmask bm);
 
 void blMarkOverlaps(Block self, Block other, cardinal dir);

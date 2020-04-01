@@ -19,7 +19,7 @@ Context coCreate(unsigned short xSize, unsigned short ySize) {
 void coDestroy(Context self) {
     for (unsigned int k = self->xSize * self->ySize - 1; k >= 0; k--) {
         bmDestroy(self->tiles[k].validBlockMask);
-        bmDestroy(self->tiles[k].oldValidBlockMask);
+        bmDestroy(self->tiles[k].rippleDifference);
     }
     free(self->tiles);
     free(self->eHeap);
@@ -97,32 +97,11 @@ void coHeaprefresh(Context self, unsigned int tID) {
     assert (0);
 }
 
-Bitmask tiCollapseTo(Context self, unsigned int tID, Block block) {
+void tiCollapseTo(Context self, unsigned int tID, Block block) {
     Bitmask difference = self->tiles[tID].validBlockMask;
-    self->tiles[tID].validBlockMask = block->fullMask;
-    blbmRemove(block, difference);
+    self->tiles[tID].validBlockMask = self->tiles[tID].rippleDifference;
+    self->tiles[tID].rippleDifference = difference;
 
-    self->rippleDifference = 
-    return difference;
-    /*
-        difference = self.validBlockMask ^ block.bitMask
-        self.validBlockMask = block.bitMask
-        self.collapse()
-        return difference
-
-    def collapse(self):
-        self.collapsed = True
-        self.finalValue = next(iter(self.blockSet.unpack(self.validBlockMask))).lookup((0,0))
-        self.refreshValues()
-
-    assert (0);
-    return NULL;*/
+    blbmSet(block, self->tiles[tID].validBlockMask);
+    blbmRemove(block, self->tiles[tID].rippleDifference);
 }
-
-/*
-int main(int argc, char** argv) {
-    Context co1 = coCreate(5, 5);
-    coPrint(co1);
-    return 0;
-}
-*/

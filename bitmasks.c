@@ -51,6 +51,18 @@ int bmTrue(Bitmask self) {
     return 0;
 }
 
+void bmClear(Bitmask self) {
+    for(int k = self->len - 1; k >= 0; k--) {
+        self->fields[k] = 0ULL;
+    }
+}
+void bmNot(Bitmask self) {
+    for(int k = self->len - 1; k >= 0; k--) {
+        self->fields[k] = ~self->fields[k];
+    }
+}
+
+
 void bmAnd(Bitmask self, Bitmask other) {
     assert(self->len == other->len);
     for(int k = self->len - 1; k >= 0; k--) {
@@ -104,8 +116,18 @@ Bitmask nbmXor(Bitmask b1, Bitmask b2){
     return new;
 }
 
-int* cherrypick(Bitmask self) {
-    return NULL;
+unsigned int * bmCherrypick(Bitmask self) {
+    unsigned int * output = malloc(sizeof(unsigned int) * self->len * FIELD_LEN);
+    for(int k = self->len-1; self >= 0; self--) {
+        if (self->fields[k]) {
+            field retVal = ~(self->fields[k]-1);
+            self->fields[k] &= retVal;
+            return k * FIELD_LEN;
+
+            return retVal & self->fields[k];
+        }
+    }
+    return 0;
 }
 /*
 int main(int argc, char** argv){

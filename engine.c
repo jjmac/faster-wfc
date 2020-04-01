@@ -16,6 +16,7 @@ struct engine {
 };
 
 static int advance(Engine self);
+static int rippleChangesFrom(Engine self, unsigned int tID);
 
 Engine enCreate(BlockSet blockSet, Context context, int rSeed) {
     Engine self = malloc(sizeof(struct engine));
@@ -61,30 +62,51 @@ static int advance(Engine self) {
     // pick a block to collapse it to
     Block block = bsetRandom(self->blockSet, self->context->tiles[tID].validBlockMask, self->rSeed++);
 
-    //collapse it
-    Bitmask difference = tiCollapseTo(self->context, tID, block);
+    tiCollapseTo(self->context, tID, block);
 
-    if (rippleChangesFrom(tID)) {
-
+    if (rippleChangesFrom(self, tID)) {
+        return 1;
+    } else {
+        return 0;
     }
-    return 1;
-
-    /*
-    def collapseTileTo(self, tile, block):
-        dprint ("     - collapsing", tile, "to", block)
-
-        difference = tile.collapseTo(block)
-#        oldBlocks = tile.collapseTo(block)
-        if not self.rippleChangesFrom(tile, difference):
-            dprint ("     - collapse failed - uncollapsing!")
-            tile.uncollapse(difference)
-            self.context.entropyHeap.push(tile)
-            return False
-        return True
-    */
-    return 1;
 }
 
-static int rippleChangesFrom(unsigned int tID, Bitmask bitmask) {
+// TODO: Rewrite this function so that it weaves a linkedlist through context->tiles rather than constructing a paralell list!
+typedef struct visitNode * VisitNode;
+struct visitNode {
+    unsigned int tID;
+    VisitNode next;
+};
 
+static int rippleChangesFrom(Engine self, unsigned int tID) {
+    Context context = self->context;
+    BlockSet blockSet = self->blockSet;
+
+    tile * nTile = NULL;
+    tile * curTile = NULL;
+    Bitmask curDifference = NULL;
+
+    VisitNode toVisit = malloc(sizeof(struct visitNode));
+    toVisit->tID = tID;
+    toVisit->next = NULL;
+
+    while (toVisit != NULL) {
+        tID = toVisit->tID;
+        curTile = &(context->tiles[tID]);
+        curDifference = curTile->rippleDifference;
+
+        toVisit = toVisit->next;
+
+        if (bmFalse(curTile->validBlockMask)) {
+            return 0;
+        } else {
+            nTile = &(context->tiles[ tID + 1 ]);
+
+            while (int k = bmCherrypick(curDifference)) {
+                
+            }
+
+        }
+    }
+    return 1;
 }

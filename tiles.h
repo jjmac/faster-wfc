@@ -9,7 +9,7 @@ struct tile {
     float entropy;
 
     Bitmask validBlockMask;
-    Bitmask oldValidBlockMask;
+    Bitmask rippleDifference;
 };
 
 typedef struct context * Context;
@@ -28,4 +28,4 @@ void coHeappush(Context self, unsigned int tID);
 unsigned int coHeappop(Context self);
 void coHeaprefresh(Context self, unsigned int tID);
 
-Bitmask tiCollapseTo(Context self, unsigned int tID, Block block);
+void tiCollapseTo(Context self, unsigned int tID, Block block);
