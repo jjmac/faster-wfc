@@ -2,6 +2,7 @@
 #include "bitmasks.h"
 #include "blocks.h"
 #include "blocksets.h"
+#include "tiles.h"
 #include "engine.h"
 
 int main(int argc, char** argv) {

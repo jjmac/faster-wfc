@@ -21,7 +21,8 @@ void bmAnd(Bitmask self, Bitmask other);
 void bmOr(Bitmask self, Bitmask other);
 void bmXor(Bitmask self, Bitmask other);
 
-unsigned int bmCherrypick(Bitmask self);
+unsigned int * bmCherrypick(Bitmask self);
+unsigned int * bmFastCherrypick(Bitmask self);
 
 Bitmask nbmCopy(Bitmask self);
 Bitmask nbmAnd(Bitmask b1, Bitmask b2);

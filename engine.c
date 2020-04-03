@@ -102,8 +102,10 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
         } else {
             nTile = &(context->tiles[ tID + 1 ]);
 
-            while (int k = bmCherrypick(curDifference)) {
-                
+            unsigned int * rValues = bmFastCherrypick(curDifference);
+            unsigned int index = rValues[0];
+            while (index > 0) {
+
             }
 
         }
