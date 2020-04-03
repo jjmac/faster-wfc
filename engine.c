@@ -136,22 +136,27 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
             Bitmask eDifference = bmCreate(curDifference->len);
             Bitmask wDifference = bmCreate(curDifference->len);
 
-            unsigned int * diffValues = bmFastCherrypick(curDifference);
-            unsigned int index = diffValues[0];
-            while (index > 0) {
-                Block block = bsetLookup(blockSet, diffValues[index--]);
 
-                bmOr(nDifference, block->overlapMasks[CARD_N]);
-                bmOr(sDifference, block->overlapMasks[CARD_S]);
-                bmOr(eDifference, block->overlapMasks[CARD_E]);
-                bmOr(wDifference, block->overlapMasks[CARD_W]);
+            unsigned int * diffBlockIDs = bmFastCherrypick(curDifference);
+            unsigned int index = diffBlockIDs[0];
+            while (index > 0) {
+                Block curBlock = bsetLookup(blockSet, diffBlockIDs[index--]);
+
+                bmOr(nDifference, curBlock->overlapMasks[CARD_N]);
+                bmOr(sDifference, curBlock->overlapMasks[CARD_S]);
+                bmOr(eDifference, curBlock->overlapMasks[CARD_E]);
+                bmOr(wDifference, curBlock->overlapMasks[CARD_W]);
             }
 
             if (nTile != NULL) {
-                unsigned int * nDiffValues = bmFastCherrypick(nDifference);
-                index = nDiffValues[0];
+                bmAnd(nDifference, nTile->validBlockMask);
+                diffBlockIDs = bmFastCherrypick(nDifference);
+                index = diffBlockIDs[0];
                 while (index > 0) {
-
+                    Block curBlock = bsetLookup(blockSet, diffBlockIDs[index--]);
+                    if ( bmAndFalse(curBlock->overlapMasks[CARD_S], curTile->validBlockMask ) ) {
+                        blbmAdd(curBlock, nDifference);
+                    }
                 }
             }
 
