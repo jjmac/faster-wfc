@@ -8,5 +8,6 @@ void bsetAppend(BlockSet self, Block block);
 
 void bsetLock(BlockSet self);
 
+Block bsetLookup(BlockSet self, unsigned int blockID);
 Block bsetRandom(BlockSet self, Bitmask mask, int rseed);
 float bsetEntropy(BlockSet self, Bitmask mask);

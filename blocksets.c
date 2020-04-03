@@ -164,6 +164,10 @@ void bsetLock(BlockSet self) {
     }
 }
 
+Block bsetLookup(BlockSet self, unsigned int blockID) {
+    return self->blocks[blockID];
+}
+
 Block bsetRandom(BlockSet self, Bitmask mask, int rseed){
     return NULL;
 

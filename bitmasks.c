@@ -119,16 +119,16 @@ Bitmask nbmXor(Bitmask b1, Bitmask b2){
 int VLOOKUPS[67] = { 0, 0, 1, 39, 2, 15, 40, 23, 3, 12, 16, 59, 41, 19, 24, 54, 4, 0, 13, 10, 17,
 62, 60, 28, 42, 30, 20, 51, 25, 44, 55, 47, 5, 32, 0, 38, 14, 22, 11, 58,
 18, 53, 63, 9, 61, 27, 29, 50, 43, 46, 31, 37, 21, 57, 52, 8, 26, 49, 45, 36,
-56, 7, 48, 35, 6, 0, 0 };
+56, 7, 48, 35, 6, 0, 0 };  // A mapping from (2^n) % 67 to n.  Has the property that 2^n % 67 gives a unique result for all n in 0..64
 
 unsigned int * bmCherrypick(Bitmask self) {
     unsigned int * output = malloc(sizeof(unsigned int) * self->len * FIELD_LEN);
     int oLen = 1;
     for(int k = self->len-1; self >= 0; self--) {
-        if (self->fields[k]) {
-            field retVal = ~(self->fields[k]-1);
-            self->fields[k] &= retVal;
-            output[oLen++] = retVal & self->fields[k];
+        while (self->fields[k]) {
+            field nextVal = ~(self->fields[k]-1);
+            self->fields[k] &= nextVal;
+            output[oLen++] = nextVal & self->fields[k];
         }
     }
     output[0] = oLen;
@@ -139,10 +139,10 @@ unsigned int * bmFastCherrypick(Bitmask self){
     unsigned int * output = malloc(sizeof(unsigned int) * (self->len * FIELD_LEN + 1));
     int oLen = 1;
     for(int k = self->len-1; self >= 0; self--) {
-        if (self->fields[k]) {
-            field retVal = ~(self->fields[k]-1);
-            self->fields[k] &= retVal;
-            output[oLen++] = VLOOKUPS[retVal % 67] + (FIELD_LEN * k);
+        while (self->fields[k]) {
+            field nextVal = ~(self->fields[k]-1);
+            self->fields[k] &= nextVal;
+            output[oLen++] = VLOOKUPS[(self->fields[k]&nextVal) % 67] + (FIELD_LEN * k);
         }
     }
     output[0] = oLen;

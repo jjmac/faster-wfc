@@ -100,12 +100,59 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
         if (bmFalse(curTile->validBlockMask)) {
             return 0;
         } else {
-            nTile = &(context->tiles[ tID + 1 ]);
+            int nID = tID - context->xSize;
+            int sID = tID + context->xSize;
+            int eID = tID + 1;
+            int wID = tID - 1;
 
-            unsigned int * rValues = bmFastCherrypick(curDifference);
-            unsigned int index = rValues[0];
+            tile * nTile;
+            tile * sTile;
+            tile * eTile;
+            tile * wTile;
+
+            if (nID >= 0 && nID < context->xSize * context->ySize) {
+                nTile = &(context->tiles[ nID ]);
+            } else {
+                nTile = NULL;
+            }
+            if (sID >= 0 && sID < context->xSize * context->ySize) {
+                sTile = &(context->tiles[ sID ]);
+            } else {
+                sTile = NULL;
+            }
+            if (eID >= 0 && eID < context->xSize * context->ySize) {
+                eTile = &(context->tiles[ eID ]);
+            } else {
+                eTile = NULL;
+            }
+            if (wID >= 0 && wID < context->xSize * context->ySize) {
+                wTile = &(context->tiles[ wID ]);
+            } else {
+                wTile = NULL;
+            }
+
+            Bitmask nDifference = bmCreate(curDifference->len);
+            Bitmask sDifference = bmCreate(curDifference->len);
+            Bitmask eDifference = bmCreate(curDifference->len);
+            Bitmask wDifference = bmCreate(curDifference->len);
+
+            unsigned int * diffValues = bmFastCherrypick(curDifference);
+            unsigned int index = diffValues[0];
             while (index > 0) {
+                Block block = bsetLookup(blockSet, diffValues[index--]);
 
+                bmOr(nDifference, block->overlapMasks[CARD_N]);
+                bmOr(sDifference, block->overlapMasks[CARD_S]);
+                bmOr(eDifference, block->overlapMasks[CARD_E]);
+                bmOr(wDifference, block->overlapMasks[CARD_W]);
+            }
+
+            if (nTile != NULL) {
+                unsigned int * nDiffValues = bmFastCherrypick(nDifference);
+                index = nDiffValues[0];
+                while (index > 0) {
+
+                }
             }
 
         }
