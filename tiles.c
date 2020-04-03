@@ -97,8 +97,24 @@ void coHeaprefresh(Context self, unsigned int tID) {
     assert (0);
 }
 
+void tiRefreshValues(Context self, unsigned int tID) {
+    bmEntropy(self->tiles[tID].validBlockMask, self->blockSet,  &self->tiles[tID].frequency, &self->tiles[tID].entropy);
+}
+
+void bmEntropy(Bitmask bm, BlockSet bset, int * freq, int * entropy) {
+    int innerSum = 0;
+    *freq = 0;
+    return;
+}
+
 void tiCollapseTo(Context self, unsigned int tID, Block block) {
     Bitmask difference = self->tiles[tID].validBlockMask;
+
+    printf("Block ptr is %p\n", block);
+    printf("Difference ptr is %p / value is:", difference);
+    bmPrint(difference);
+    printf("\n");
+    while(1);
     self->tiles[tID].validBlockMask = self->tiles[tID].rippleDifference;
     self->tiles[tID].rippleDifference = difference;
 

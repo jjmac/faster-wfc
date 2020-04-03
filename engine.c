@@ -30,8 +30,11 @@ void enDestroy(Engine self) {
 }
 
 void enRun(Engine self) {
+    printf("=== Starting run!\n");
     enPrepare(self);
+    printf("=== Prepare call complete!\n");
     enCoreLoop(self);
+    printf("=== Core loop complete!\n");
     enCleanup(self);
 }
 
@@ -39,14 +42,24 @@ void enPrepare(Engine self) {
     Context context = self->context;
     BlockSet blockSet = self->blockSet;
 
-    for (unsigned int tID = context->xSize*context->ySize - 1; tID >= 0; tID--) {
+    printf("= In prepare!\n");
+
+    for (unsigned int tID = context->xSize*context->ySize - 1; tID != -1; tID--) {
+        context->tiles[tID].validBlockMask = bsetTrueMask(blockSet);
         context->tiles[tID].entropy = bsetEntropy(blockSet, context->tiles[tID].validBlockMask);
+
+
+        printf("Tile %d has mask:", tID);
+        bmPrint(context->tiles[tID].validBlockMask);
+        printf("\n");
+
         coHeappush(context, tID);
     }
 }
 
 void enCoreLoop(Engine self) {
     while (self->context->eHeap[0]) {
+        printf("= In core loop - advancing!\n");
         advance(self);
     }
 }
@@ -56,13 +69,29 @@ void enCleanup(Engine self) {
 }
 
 static int advance(Engine self) {
+    printf("In call to advance()!\n");
+
     // pick a tile to collapse
     unsigned int tID = coHeappop(self->context);
+
+    printf(" Got random tID: %d\n", tID);
+
+    printf(" Tile blockmask is %p\n", self->context->tiles[tID].validBlockMask);
+
 
     // pick a block to collapse it to
     Block block = bsetRandom(self->blockSet, self->context->tiles[tID].validBlockMask, self->rSeed++);
 
+    printf(" Got random blockPtr %p\n", block);
+    printf(" Collapsing tile %d to block:\n", tID);
+    blPrint(block);
+
     tiCollapseTo(self->context, tID, block);
+    printf(" Done tile collapse!\n");
+
+    while(1){
+
+    }
 
     if (rippleChangesFrom(self, tID)) {
         return 1;
@@ -79,6 +108,8 @@ struct visitNode {
 };
 
 static int rippleChangesFrom(Engine self, unsigned int tID) {
+    printf("In call to rippleChangesFrom()!\n");
+
     Context context = self->context;
     BlockSet blockSet = self->blockSet;
     unsigned int diffBlockIDs[context->tiles[0].validBlockMask->len * FIELD_LEN + 1];

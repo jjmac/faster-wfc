@@ -20,6 +20,7 @@ struct blockSet {
     unsigned char size;
     unsigned int len;
 
+    Bitmask allTrueMask;
     Block * blocks;
     BlockListNode blockList;
 };
@@ -121,6 +122,7 @@ void bsetLock(BlockSet self) {
     Block curBlock, innerBlock;
 
     unsigned char numFields = ((self->len-1) / FIELD_LEN) + 1;
+    self->allTrueMask = bmCreate(numFields);
 
     while (self->blockList != NULL) {
         curBlock = self->blockList->value;
@@ -130,6 +132,8 @@ void bsetLock(BlockSet self) {
         curBlock->fieldIndex = absIndex / FIELD_LEN;
         curBlock->bitIndex = absIndex % FIELD_LEN;
         curBlock->localMask = 1ULL << (absIndex % 64);
+
+        blbmAdd(curBlock, self->allTrueMask);
 
         curBlock->overlapMasks[CARD_N] = bmCreate(numFields);
         curBlock->overlapMasks[CARD_S] = bmCreate(numFields);
@@ -169,9 +173,38 @@ Block bsetLookup(BlockSet self, unsigned int blockID) {
 }
 
 Block bsetRandom(BlockSet self, Bitmask mask, int rseed){
-    return NULL;
+    unsigned int totalFrequency = 0;
 
+    printf("Randomly rolling from blockSet!\n");
+
+    unsigned int cherrypickValues[self->len+1];
+    bmFastCherrypick(mask, cherrypickValues);
+
+    printf("Finished cherrypick!\n");
+
+
+    for (int k = cherrypickValues[0]; k > 0; k--) {
+        totalFrequency = self->blocks[cherrypickValues[k]]->freq;
+    }
+
+    printf("Finished summing; got totalFrequency %d!\n", totalFrequency);
+
+    int roll = rand() % totalFrequency;
+
+    for (int k = cherrypickValues[0]; k > 0; k--) {
+        Block block = self->blocks[cherrypickValues[k]];
+        roll -= block->freq;
+        if (roll <= 0) {
+            return block;
+        }
+    }
+    assert(1==0);
+    return NULL;
 }
 float bsetEntropy(BlockSet self, Bitmask mask) {
     return 0.0;
+}
+
+Bitmask bsetTrueMask(BlockSet self){
+    return self->allTrueMask;
 }

@@ -131,9 +131,10 @@ int VLOOKUPS[67] = { 0, 0, 1, 39, 2, 15, 40, 23, 3, 12, 16, 59, 41, 19, 24, 54, 
 18, 53, 63, 9, 61, 27, 29, 50, 43, 46, 31, 37, 21, 57, 52, 8, 26, 49, 45, 36,
 56, 7, 48, 35, 6, 0, 0 };  // A mapping from (2^n) % 67 to n.  Has the property that 2^n % 67 gives a unique result for all n in 0..64
 
+/// does not work!
 void bmCherrypick(Bitmask self, unsigned int * output) {
     int oLen = 1;
-    for(int k = self->len-1; self >= 0; self--) {
+    for(int k = self->len-1; k >= 0; k--) {
         while (self->fields[k]) {
             field nextVal = ~(self->fields[k]-1);
             self->fields[k] &= nextVal;
@@ -144,13 +145,21 @@ void bmCherrypick(Bitmask self, unsigned int * output) {
 }
 
 void bmFastCherrypick(Bitmask self, unsigned int * output) {
-    int oLen = 1;
-    for(int k = self->len-1; self >= 0; self--) {
+    printf("    Running a fast cherrypick of bitmask:");
+    bmPrint(self);
+    printf("\n");
+    printf("    Output x is %p\n", output);
+    int oLen = 0;
+    for(int k = self->len-1; k >= 0; k--) {
+        printf("    -- Checking field %d it is %llx\n", k, self->fields[k]);
         while (self->fields[k]) {
-            field nextVal = ~(self->fields[k]-1);
-            self->fields[k] &= nextVal;
-            output[oLen++] = VLOOKUPS[(self->fields[k]&nextVal) % 67] + (FIELD_LEN * k);
+            field nextVal = (self->fields[k]-1) & self->fields[k];
+            printf("    Nextval is %llx\n", nextVal);
+            output[++oLen] = VLOOKUPS[(nextVal ^ self->fields[k]) % 67] + (FIELD_LEN * k);
+            self->fields[k] = nextVal;
+            printf("    Aftand selfield is %llx\n", self->fields[k]);
         }
     }
+    printf("    doing output (oLen %d)\n", oLen);
     output[0] = oLen;
 }
