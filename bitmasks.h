@@ -23,8 +23,8 @@ void bmXor(Bitmask self, Bitmask other);
 
 int bmAndFalse(Bitmask self, Bitmask other);
 
-unsigned int * bmCherrypick(Bitmask self);
-unsigned int * bmFastCherrypick(Bitmask self);
+void bmCherrypick(Bitmask self, unsigned int * output);
+void bmFastCherrypick(Bitmask self, unsigned int * output);
 
 Bitmask nbmCopy(Bitmask self);
 Bitmask nbmAnd(Bitmask b1, Bitmask b2);

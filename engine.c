@@ -81,6 +81,7 @@ struct visitNode {
 static int rippleChangesFrom(Engine self, unsigned int tID) {
     Context context = self->context;
     BlockSet blockSet = self->blockSet;
+    unsigned int diffBlockIDs[context->tiles[0].validBlockMask->len * FIELD_LEN + 1];
 
     tile * nTile = NULL;
     tile * curTile = NULL;
@@ -136,8 +137,7 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
             Bitmask eDifference = bmCreate(curDifference->len);
             Bitmask wDifference = bmCreate(curDifference->len);
 
-
-            unsigned int * diffBlockIDs = bmFastCherrypick(curDifference);
+            bmFastCherrypick(curDifference, diffBlockIDs);
             unsigned int index = diffBlockIDs[0];
             while (index > 0) {
                 Block curBlock = bsetLookup(blockSet, diffBlockIDs[index--]);
@@ -150,7 +150,7 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
 
             if (nTile != NULL) {
                 bmAnd(nDifference, nTile->validBlockMask);
-                diffBlockIDs = bmFastCherrypick(nDifference);
+                bmFastCherrypick(nDifference, diffBlockIDs);
                 index = diffBlockIDs[0];
                 while (index > 0) {
                     Block curBlock = bsetLookup(blockSet, diffBlockIDs[index--]);

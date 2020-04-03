@@ -131,8 +131,7 @@ int VLOOKUPS[67] = { 0, 0, 1, 39, 2, 15, 40, 23, 3, 12, 16, 59, 41, 19, 24, 54, 
 18, 53, 63, 9, 61, 27, 29, 50, 43, 46, 31, 37, 21, 57, 52, 8, 26, 49, 45, 36,
 56, 7, 48, 35, 6, 0, 0 };  // A mapping from (2^n) % 67 to n.  Has the property that 2^n % 67 gives a unique result for all n in 0..64
 
-unsigned int * bmCherrypick(Bitmask self) {
-    unsigned int * output = malloc(sizeof(unsigned int) * self->len * FIELD_LEN);
+void bmCherrypick(Bitmask self, unsigned int * output) {
     int oLen = 1;
     for(int k = self->len-1; self >= 0; self--) {
         while (self->fields[k]) {
@@ -142,11 +141,9 @@ unsigned int * bmCherrypick(Bitmask self) {
         }
     }
     output[0] = oLen;
-    return output;
 }
 
-unsigned int * bmFastCherrypick(Bitmask self){
-    unsigned int * output = malloc(sizeof(unsigned int) * (self->len * FIELD_LEN + 1));
+void bmFastCherrypick(Bitmask self, unsigned int * output) {
     int oLen = 1;
     for(int k = self->len-1; self >= 0; self--) {
         while (self->fields[k]) {
@@ -156,5 +153,4 @@ unsigned int * bmFastCherrypick(Bitmask self){
         }
     }
     output[0] = oLen;
-    return output;
 }
