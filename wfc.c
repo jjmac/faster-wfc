@@ -10,11 +10,12 @@ int main(int argc, char** argv) {
 
     BlockSet bset = bsetCreate( 2 );
 
-    Block a1 = blCreateFromString(2, "aa..");
-    Block a2 = blCreateFromString(2, "aa..");
-
-    bsetAppend(bset, a1);
-    bsetAppend(bset, a2);
+//    bsetAppend(bset, blCreateFromString(2, "aa.."));
+//    bsetAppend(bset, blCreateFromString(2, "..aa"));
+    bsetAppend(bset, blCreateFromString(2, "aaaa"));
+    bsetAppend(bset, blCreateFromString(2, "bbbb"));
+    bsetAppend(bset, blCreateFromString(2, "cccc"));
+    bsetAppend(bset, blCreateFromString(2, "dddd"));
 
     bsetLock(bset);
 

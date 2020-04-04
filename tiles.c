@@ -121,11 +121,12 @@ void tiCollapseTo(Context self, unsigned int tID, Block block) {
     blbmSet(block, self->tiles[tID].validBlockMask);
     blbmRemove(block, self->tiles[tID].rippleDifference);
 
+    /*
     printf("   After edits, VBM is %p / value is:", self->tiles[tID].validBlockMask);
     bmPrint(self->tiles[tID].validBlockMask);
     printf("\n");
     printf("   After edits, RipD is %p / value is:", self->tiles[tID].rippleDifference);
     bmPrint(self->tiles[tID].rippleDifference);
     printf("\n");
-
+    */
 }

@@ -174,32 +174,37 @@ Block bsetLookup(BlockSet self, unsigned int blockID) {
 }
 
 Block bsetRandom(BlockSet self, Bitmask mask, int roll){
-    printf("Randomly rolling from blockSet (roll %d)!\n", roll);
+//    printf("   Randomly rolling from blockSet (roll %d)!\n", roll);
 
     unsigned int cherrypickValues[self->len+1];
     Bitmask newmask = nbmCopy(mask);
     bmFastCherrypick(newmask, cherrypickValues);
     bmDestroy(newmask);
 
-    printf("Finished cherrypick!\n");
+//    printf("cherrypickValues is:");
+
+//    for (int k = cherrypickValues[0]; k > 0; k--) {
+//        printf("%d,", cherrypickValues[k]);
+//    }
+//    printf("\n");
 
     for (int k = cherrypickValues[0]; k > 0; k--) {
         Block block = self->blocks[cherrypickValues[k]];
-        printf("Got block w/freq %d!\n", block->freq);
-        blPrint(block);
+//        printf("   Got block w/freq %d!\n", block->freq);
+//        blPrint(block);
 
         roll -= block->freq;
-        if (roll <= 0) {
+        if (roll < 0) {
+//            printf("   (it was selected!)\n");
             return block;
         }
 
-        printf("Roll now %d!\n", roll);
-
+//        printf("   Roll now %d!\n", roll);
     }
     assert(1==0);
     return NULL;
 }
-void bsetEntropy(BlockSet bset, Bitmask bm, unsigned int * freq, float * entropy) {
+void bsetEntropy(BlockSet self, Bitmask bm, unsigned int * freq, float * entropy) {
     float innerSum = 0;
     *freq = 0;
 
@@ -207,8 +212,8 @@ void bsetEntropy(BlockSet bset, Bitmask bm, unsigned int * freq, float * entropy
     bmPrint(bm);
     printf("\n");
 
-    for (int k = bset->len - 1; k >= 0; k--) {
-        Block block = bsetLookup(bset, k);
+    for (int k = self->len - 1; k >= 0; k--) {
+        Block block = bsetLookup(self, k);
         if (blbmContains(block, bm)) {
             *freq += block->freq;
             innerSum += block->freq * log2(block->freq);
@@ -216,8 +221,20 @@ void bsetEntropy(BlockSet bset, Bitmask bm, unsigned int * freq, float * entropy
     }
     *entropy = log2(*freq) - (innerSum / *freq);
 
-    printf ("Set final freq %d / entropy %f:", *freq, *entropy);
+    printf ("Set final freq %d / entropy %f\n", *freq, *entropy);
 
+}
+
+char bsetBlockToValue(BlockSet self, Bitmask bm){
+    for (int k = self->len - 1; k >= 0; k--) {
+        Block block = bsetLookup(self, k);
+        if (blbmContains(block, bm)) {
+            return '0' + k;
+            return block->values[0];
+        }
+    }
+    assert(1==0);
+    return 0;
 }
 
 Bitmask bsetTrueMask(BlockSet self){

@@ -17,6 +17,7 @@ int bmTrue(Bitmask self);
 
 void bmClear(Bitmask self);
 void bmNot(Bitmask self);
+void bmCopy(Bitmask self, Bitmask other);
 void bmAnd(Bitmask self, Bitmask other);
 void bmOr(Bitmask self, Bitmask other);
 void bmXor(Bitmask self, Bitmask other);

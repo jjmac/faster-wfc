@@ -36,7 +36,7 @@ void bmPrint(Bitmask self) {
 
 int bmFalse(Bitmask self) {
     for(int k = self->len-1; k >= 0; k--) {
-        if (!(self->fields[k])) {
+        if (self->fields[k]) {
             return 0;
         }
     }
@@ -63,6 +63,12 @@ void bmNot(Bitmask self) {
 }
 
 
+void bmCopy(Bitmask self, Bitmask other) {
+    assert(self->len == other->len);
+    for(int k = self->len - 1; k >= 0; k--) {
+        self->fields[k] = other->fields[k];
+    }
+}
 void bmAnd(Bitmask self, Bitmask other) {
     assert(self->len == other->len);
     for(int k = self->len - 1; k >= 0; k--) {
@@ -145,21 +151,21 @@ void bmCherrypick(Bitmask self, unsigned int * output) {
 }
 
 void bmFastCherrypick(Bitmask self, unsigned int * output) {
-    printf("    Running a fast cherrypick of bitmask:");
-    bmPrint(self);
-    printf("\n");
-    printf("    Output x is %p\n", output);
+//    printf("    Running a fast cherrypick of bitmask:");
+//    bmPrint(self);
+//    printf("\n");
+//    printf("    Output x is %p\n", output);
     int oLen = 0;
     for(int k = self->len-1; k >= 0; k--) {
-        printf("    -- Checking field %d it is %llx\n", k, self->fields[k]);
+//        printf("    -- Checking field %d it is %llx\n", k, self->fields[k]);
         while (self->fields[k]) {
             field nextVal = (self->fields[k]-1) & self->fields[k];
-            printf("    Nextval is %llx\n", nextVal);
+//            printf("    Nextval is %llx\n", nextVal);
             output[++oLen] = VLOOKUPS[(nextVal ^ self->fields[k]) % 67] + (FIELD_LEN * k);
             self->fields[k] = nextVal;
-            printf("    Aftand selfield is %llx\n", self->fields[k]);
+//            printf("    Aftand selfield is %llx\n", self->fields[k]);
         }
     }
-    printf("    doing output (oLen %d)\n", oLen);
+//    printf("    doing output (oLen %d)\n", oLen);
     output[0] = oLen;
 }

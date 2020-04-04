@@ -11,6 +11,7 @@ void bsetLock(BlockSet self);
 Block bsetLookup(BlockSet self, unsigned int blockID);
 Block bsetRandom(BlockSet self, Bitmask mask, int roll);
 void bsetEntropy(BlockSet bset, Bitmask bm, unsigned int * freq, float * entropy);
+char bsetBlockToValue(BlockSet self, Bitmask bm);
 
 Bitmask bsetTrueMask(BlockSet self);
 Bitmask bsetFalseMask(BlockSet self);
