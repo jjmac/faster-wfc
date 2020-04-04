@@ -5,6 +5,7 @@
 #include "cardinals.h"
 #include "bitmasks.h"
 #include "blocks.h"
+#include "blocksets.h"
 #include "tiles.h"
 
 Context coCreate(unsigned short xSize, unsigned short ySize) {
@@ -16,6 +17,7 @@ Context coCreate(unsigned short xSize, unsigned short ySize) {
     assert(self->tiles != NULL);
     return self;
 }
+
 void coDestroy(Context self) {
     for (unsigned int k = self->xSize * self->ySize - 1; k >= 0; k--) {
         bmDestroy(self->tiles[k].validBlockMask);
@@ -97,27 +99,33 @@ void coHeaprefresh(Context self, unsigned int tID) {
     assert (0);
 }
 
-void tiRefreshValues(Context self, unsigned int tID) {
-    bmEntropy(self->tiles[tID].validBlockMask, self->blockSet,  &self->tiles[tID].frequency, &self->tiles[tID].entropy);
-}
-
-void bmEntropy(Bitmask bm, BlockSet bset, int * freq, int * entropy) {
-    int innerSum = 0;
-    *freq = 0;
-    return;
+void tiRefreshValues(Context self, BlockSet bset, unsigned int tID) {
+    bsetEntropy(bset, self->tiles[tID].validBlockMask,  &(self->tiles[tID].freq), &(self->tiles[tID].entropy));
 }
 
 void tiCollapseTo(Context self, unsigned int tID, Block block) {
     Bitmask difference = self->tiles[tID].validBlockMask;
 
-    printf("Block ptr is %p\n", block);
-    printf("Difference ptr is %p / value is:", difference);
-    bmPrint(difference);
+    /*
+    printf("   Before edits, VBM is %p / value is:", self->tiles[tID].validBlockMask);
+    bmPrint(self->tiles[tID].validBlockMask);
     printf("\n");
-    while(1);
+    printf("   Before edits, RipD is %p / value is:", self->tiles[tID].rippleDifference);
+    bmPrint(self->tiles[tID].rippleDifference);
+    printf("\n");
+    */
+
     self->tiles[tID].validBlockMask = self->tiles[tID].rippleDifference;
     self->tiles[tID].rippleDifference = difference;
 
     blbmSet(block, self->tiles[tID].validBlockMask);
     blbmRemove(block, self->tiles[tID].rippleDifference);
+
+    printf("   After edits, VBM is %p / value is:", self->tiles[tID].validBlockMask);
+    bmPrint(self->tiles[tID].validBlockMask);
+    printf("\n");
+    printf("   After edits, RipD is %p / value is:", self->tiles[tID].rippleDifference);
+    bmPrint(self->tiles[tID].rippleDifference);
+    printf("\n");
+
 }

@@ -67,6 +67,7 @@ static void blPrintOverlaps(Block self, cardinal dir);
 
 Block blCreate(int size){
     Block self = malloc(sizeof(struct block));
+    self->freq = 1;
     self->size = size;
     self->values = malloc(sizeof(char) * self->size * self->size);
     return self;
@@ -118,6 +119,9 @@ void blbmRemove(Block self, Bitmask bm) {
 void blbmSet(Block self, Bitmask bm) {
     bmClear(bm);
     bm->fields[self->fieldIndex] |= self->localMask;
+}
+int blbmContains(Block self, Bitmask bm) {
+    return bm->fields[self->fieldIndex] & self->localMask;
 }
 
 

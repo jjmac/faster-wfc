@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <math.h>
 
 #include "cardinals.h"
 #include "bitmasks.h"
@@ -172,39 +173,56 @@ Block bsetLookup(BlockSet self, unsigned int blockID) {
     return self->blocks[blockID];
 }
 
-Block bsetRandom(BlockSet self, Bitmask mask, int rseed){
-    unsigned int totalFrequency = 0;
-
-    printf("Randomly rolling from blockSet!\n");
+Block bsetRandom(BlockSet self, Bitmask mask, int roll){
+    printf("Randomly rolling from blockSet (roll %d)!\n", roll);
 
     unsigned int cherrypickValues[self->len+1];
-    bmFastCherrypick(mask, cherrypickValues);
+    Bitmask newmask = nbmCopy(mask);
+    bmFastCherrypick(newmask, cherrypickValues);
+    bmDestroy(newmask);
 
     printf("Finished cherrypick!\n");
 
-
-    for (int k = cherrypickValues[0]; k > 0; k--) {
-        totalFrequency = self->blocks[cherrypickValues[k]]->freq;
-    }
-
-    printf("Finished summing; got totalFrequency %d!\n", totalFrequency);
-
-    int roll = rand() % totalFrequency;
-
     for (int k = cherrypickValues[0]; k > 0; k--) {
         Block block = self->blocks[cherrypickValues[k]];
+        printf("Got block w/freq %d!\n", block->freq);
+        blPrint(block);
+
         roll -= block->freq;
         if (roll <= 0) {
             return block;
         }
+
+        printf("Roll now %d!\n", roll);
+
     }
     assert(1==0);
     return NULL;
 }
-float bsetEntropy(BlockSet self, Bitmask mask) {
-    return 0.0;
+void bsetEntropy(BlockSet bset, Bitmask bm, unsigned int * freq, float * entropy) {
+    float innerSum = 0;
+    *freq = 0;
+
+    printf ("Setting entropy of bitmask %p / value:", bm);
+    bmPrint(bm);
+    printf("\n");
+
+    for (int k = bset->len - 1; k >= 0; k--) {
+        Block block = bsetLookup(bset, k);
+        if (blbmContains(block, bm)) {
+            *freq += block->freq;
+            innerSum += block->freq * log2(block->freq);
+        }
+    }
+    *entropy = log2(*freq) - (innerSum / *freq);
+
+    printf ("Set final freq %d / entropy %f:", *freq, *entropy);
+
 }
 
 Bitmask bsetTrueMask(BlockSet self){
-    return self->allTrueMask;
+    return nbmCopy(self->allTrueMask);
+}
+Bitmask bsetFalseMask(BlockSet self){
+    return bmCreate( ((self->len-1) / FIELD_LEN) + 1 );
 }

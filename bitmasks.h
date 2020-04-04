@@ -21,7 +21,7 @@ void bmAnd(Bitmask self, Bitmask other);
 void bmOr(Bitmask self, Bitmask other);
 void bmXor(Bitmask self, Bitmask other);
 
-int bmAndFalse(Bitmask self, Bitmask other);
+int bmAndValue(Bitmask self, Bitmask other);
 
 void bmCherrypick(Bitmask self, unsigned int * output);
 void bmFastCherrypick(Bitmask self, unsigned int * output);

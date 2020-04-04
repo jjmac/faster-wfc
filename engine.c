@@ -46,10 +46,10 @@ void enPrepare(Engine self) {
 
     for (unsigned int tID = context->xSize*context->ySize - 1; tID != -1; tID--) {
         context->tiles[tID].validBlockMask = bsetTrueMask(blockSet);
-        context->tiles[tID].entropy = bsetEntropy(blockSet, context->tiles[tID].validBlockMask);
+        context->tiles[tID].rippleDifference = bsetFalseMask(blockSet);
+        tiRefreshValues(context, blockSet, tID);
 
-
-        printf("Tile %d has mask:", tID);
+        printf("Tile %d has freq %d ent %f mask:", tID, context->tiles[tID].freq, context->tiles[tID].entropy);
         bmPrint(context->tiles[tID].validBlockMask);
         printf("\n");
 
@@ -76,11 +76,11 @@ static int advance(Engine self) {
 
     printf(" Got random tID: %d\n", tID);
 
-    printf(" Tile blockmask is %p\n", self->context->tiles[tID].validBlockMask);
+    printf(" Tile blockmask is %p, freq %d\n", self->context->tiles[tID].validBlockMask, self->context->tiles[tID].freq);
 
 
     // pick a block to collapse it to
-    Block block = bsetRandom(self->blockSet, self->context->tiles[tID].validBlockMask, self->rSeed++);
+    Block block = bsetRandom(self->blockSet, self->context->tiles[tID].validBlockMask, self->rSeed++ % (self->context->tiles[tID].freq));
 
     printf(" Got random blockPtr %p\n", block);
     printf(" Collapsing tile %d to block:\n", tID);
@@ -88,10 +88,6 @@ static int advance(Engine self) {
 
     tiCollapseTo(self->context, tID, block);
     printf(" Done tile collapse!\n");
-
-    while(1){
-
-    }
 
     if (rippleChangesFrom(self, tID)) {
         return 1;
@@ -185,7 +181,7 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
                 index = diffBlockIDs[0];
                 while (index > 0) {
                     Block curBlock = bsetLookup(blockSet, diffBlockIDs[index--]);
-                    if ( bmAndFalse(curBlock->overlapMasks[CARD_S], curTile->validBlockMask ) ) {
+                    if ( ! bmAndValue(curBlock->overlapMasks[CARD_S], curTile->validBlockMask ) ) {
                         blbmAdd(curBlock, nDifference);
                     }
                 }

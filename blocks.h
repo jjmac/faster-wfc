@@ -26,5 +26,6 @@ void blPrintData(Block self);
 void blbmAdd(Block self, Bitmask bm);
 void blbmRemove(Block self, Bitmask bm);
 void blbmSet(Block self, Bitmask bm);
+int blbmContains(Block self, Bitmask bm);
 
 void blMarkOverlaps(Block self, Block other, cardinal dir);

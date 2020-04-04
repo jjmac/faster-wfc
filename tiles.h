@@ -5,7 +5,7 @@ struct tile {
     unsigned int tID;
     unsigned int heapIndex;
 
-    unsigned int frequency;
+    unsigned int freq;
     float entropy;
 
     Bitmask validBlockMask;
@@ -29,3 +29,4 @@ unsigned int coHeappop(Context self);
 void coHeaprefresh(Context self, unsigned int tID);
 
 void tiCollapseTo(Context self, unsigned int tID, Block block);
+void tiRefreshValues(Context self, BlockSet bset, unsigned int tID);
