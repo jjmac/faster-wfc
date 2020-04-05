@@ -11,7 +11,7 @@
 Context coCreate(unsigned short xSize, unsigned short ySize) {
     Context self = malloc(sizeof(struct context));
     self->xSize = xSize;
-    self->ySize = xSize;
+    self->ySize = ySize;
     self->tiles = malloc(sizeof(tile) * (xSize * ySize));
     self->eHeap = malloc(sizeof(unsigned int) * (xSize * ySize + 1));
     assert(self->tiles != NULL);

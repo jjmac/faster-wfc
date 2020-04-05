@@ -131,6 +131,87 @@ struct visitNode {
 #define xtil(tID) (tID % context->xSize)
 #define ytil(tID) (tID / context->xSize)
 
+#define xTileID(tID) (tID % context->xSize)
+#define yTileID(tID) (tID / context->xSize)
+
+static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask cDifference, unsigned int * changedTiles, VisitNode * toVisit) {
+    Context context = self->context;
+    BlockSet blockSet = self->blockSet;
+
+    tile * curTile = &(context->tiles[tID]);
+
+    unsigned int ctID;
+    switch(dir) {
+
+        case CARD_N:
+            if (yTileID(tID) > 0) {
+                ctID = tID - context->xSize;
+                break;
+            } else {
+                return 0;
+            }
+        case CARD_S:
+            if (yTileID(tID) < (context->ySize - 1)) {
+                ctID = tID + context->xSize;
+                break;
+            } else {
+                return 0;
+            }
+        case CARD_E:
+            if (xTileID(tID) < (context->xSize - 1)) {
+                ctID = tID + 1;
+                break;
+            } else {
+                return 0;
+            }
+        case CARD_W:
+            if (xTileID(tID) > 0) {
+                ctID = tID - 1;
+                break;
+            } else {
+                return 0;
+            }
+        default:
+            assert(1==0);
+    }
+
+    printf("      - In ChildTile (%d, %d) / pot removing:", xTileID(ctID), yTileID(ctID));
+    bmPrint(cDifference);
+    printf("\n");
+
+    tile * cTile = &(context->tiles[ctID]);
+    unsigned int diffBlockIDs[bsetLen(blockSet) + 1];
+
+    cTile = &(context->tiles[ctID]);
+    printf("     - Adj sTile (%d, %d) with vbm:", xtil(ctID), ytil(ctID));
+    bmPrint(cTile->validBlockMask);
+    printf("\n");
+
+    bmAnd(cDifference, cTile->validBlockMask);
+    bmFastCherrypick(cDifference, diffBlockIDs);
+    unsigned int index = diffBlockIDs[0];
+    while (index > 0) {
+        Block curBlock = bsetLookup(blockSet, diffBlockIDs[index--]);
+        if ( bmAndValue(curBlock->overlapMasks[CARD_S], curTile->validBlockMask ) ) {
+            blbmRemove(curBlock, cDifference);
+        }
+    }
+
+    if (bmTrue(cDifference)) {
+        VisitNode nextToVisit = malloc(sizeof(struct visitNode));
+        nextToVisit->tID = ctID;
+        nextToVisit->next = *toVisit;
+        *toVisit = nextToVisit;
+
+        changedTiles[++changedTiles[0]] = ctID;
+
+        bmOr(cTile->rippleDifference, cDifference);
+        bmNot(cDifference);
+        bmAnd(cTile->validBlockMask, cDifference);
+    }
+    return 1;
+}
+
 static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * changedTiles) {
     printf("   In call to rippleChangesFrom()!\n");
     changedTiles[0] = 0;
@@ -153,7 +234,7 @@ static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * chang
 
         toVisit = toVisit->next;
 
-        printf("   - Visiting tile (%d, %d) with vbm:", xtil(tID), ytil(tID));
+        printf("   - Visiting tile (%d, %d) with vbm:", xTileID(tID), yTileID(tID));
         bmPrint(curTile->validBlockMask);
         printf("  (falisty %d)\n", bmFalse(curTile->validBlockMask));
         printf("   - Tile also has rippleDiff:");
@@ -162,16 +243,6 @@ static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * chang
         if (bmFalse(curTile->validBlockMask)) {
             return 0;
         } else {
-            int nID = tID - context->xSize;
-            int sID = tID + context->xSize;
-            int eID = tID + 1;
-            int wID = tID - 1;
-
-            tile * nTile;
-            tile * sTile;
-            tile * eTile;
-            tile * wTile;
-
             Bitmask nDifference = bmCreate(curDifference->len);
             Bitmask sDifference = bmCreate(curDifference->len);
             Bitmask eDifference = bmCreate(curDifference->len);
@@ -188,6 +259,7 @@ static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * chang
                 bmOr(wDifference, curBlock->overlapMasks[CARD_W]);
             }
 
+/*
             if (nID >= 0 && nID < context->xSize * context->ySize) {
                 nTile = &(context->tiles[ nID ]);
                 printf("     - Adj nTile (%d, %d) with vbm:", xtil(nID), ytil(nID));
@@ -227,118 +299,15 @@ static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * chang
                     bmNot(nDifference);
                     bmAnd(nTile->validBlockMask, nDifference);
 
-                    printf("       - Adding nTile - tile w/ tID %d pos (%d, %d)\n", nID, xtil(nID), ytil(nID));
+                    printf("       - Adding yTileID - tile w/ tID %d pos (%d, %d)\n", nID, xTileID(nID), yTileID(nID));
 //                    printf("       - Adding nTile - tile w/ tID %d pos (%d, %d)\n", nTile->tID, xtil(nTile->tID), ytil(nTile->tID));
                 }
-            }
-/*
-                if wDisabledBlocks:
-                    rprint ("  removing w", wDisabledBlocks, "wTile was", wTile.validBlockMask)
-                    toVisit.add(wTile)
-                    changedTiles.add(wTile)
-                    wTile.preReduce(wDisabledBlocks)
-                    rprint ("    - wTile now", wTile.validBlockMask)
-*/
+            }*/
 
-            if (sID >= 0 && sID < context->xSize * context->ySize) {
-                sTile = &(context->tiles[ sID ]);
-                printf("     - Adj sTile (%d, %d) with vbm:", xtil(sID), ytil(sID));
-                bmPrint(sTile->validBlockMask);
-                printf("\n");
-            } else {
-                sTile = NULL;
-            }
-            if (sTile != NULL) {
-                bmAnd(sDifference, sTile->validBlockMask);
-                bmFastCherrypick(sDifference, diffBlockIDs);
-                index = diffBlockIDs[0];
-                while (index > 0) {
-                    Block curBlock = bsetLookup(blockSet, diffBlockIDs[index--]);
-                    if ( ! bmAndValue(curBlock->overlapMasks[CARD_S], curTile->validBlockMask ) ) {
-                        blbmAdd(curBlock, sDifference);
-                    }
-                }
-
-                if (bmTrue(sDifference)) {
-                    VisitNode nextToVisit = malloc(sizeof(struct visitNode));
-                    nextToVisit->tID = sID;
-                    nextToVisit->next = toVisit;
-                    toVisit = nextToVisit;
-
-                    changedTiles[++changedTiles[0]] = sID;
-
-                    bmOr(sTile->rippleDifference, sDifference);
-                    bmNot(sDifference);
-                    bmAnd(sTile->validBlockMask, sDifference);
-                }
-            }
-
-            if (eID >= 0 && eID < context->xSize * context->ySize) {
-                eTile = &(context->tiles[ eID ]);
-                printf("     - Adj eTile (%d, %d) with vbm:", xtil(eID), ytil(eID));
-                bmPrint(eTile->validBlockMask);
-                printf("\n");
-            } else {
-                eTile = NULL;
-            }
-            if (eTile != NULL) {
-                bmAnd(eDifference, eTile->validBlockMask);
-                bmFastCherrypick(eDifference, diffBlockIDs);
-                index = diffBlockIDs[0];
-                while (index > 0) {
-                    Block curBlock = bsetLookup(blockSet, diffBlockIDs[index--]);
-                    if ( ! bmAndValue(curBlock->overlapMasks[CARD_E], curTile->validBlockMask ) ) {
-                        blbmAdd(curBlock, eDifference);
-                    }
-                }
-
-                if (bmTrue(eDifference)) {
-                    VisitNode nextToVisit = malloc(sizeof(struct visitNode));
-                    nextToVisit->tID = eID;
-                    nextToVisit->next = toVisit;
-                    toVisit = nextToVisit;
-
-                    changedTiles[++changedTiles[0]] = eID;
-
-                    bmOr(eTile->rippleDifference, eDifference);
-                    bmNot(eDifference);
-                    bmAnd(eTile->validBlockMask, eDifference);
-                }
-            }
-
-            if (wID >= 0 && wID < context->xSize * context->ySize) {
-                wTile = &(context->tiles[ wID ]);
-                printf("     - Adj wTile (%d, %d) with vbm:", xtil(wID), ytil(wID));
-                bmPrint(wTile->validBlockMask);
-                printf("\n");
-            } else {
-                wTile = NULL;
-            }
-            if (wTile != NULL) {
-                bmAnd(wDifference, wTile->validBlockMask);
-                bmFastCherrypick(wDifference, diffBlockIDs);
-                index = diffBlockIDs[0];
-                while (index > 0) {
-                    Block curBlock = bsetLookup(blockSet, diffBlockIDs[index--]);
-                    if ( ! bmAndValue(curBlock->overlapMasks[CARD_W], curTile->validBlockMask ) ) {
-                        blbmAdd(curBlock, wDifference);
-                    }
-                }
-
-                if (bmTrue(wDifference)) {
-                    VisitNode nextToVisit = malloc(sizeof(struct visitNode));
-                    nextToVisit->tID = wID;
-                    nextToVisit->next = toVisit;
-                    toVisit = nextToVisit;
-
-                    changedTiles[++changedTiles[0]] = wID;
-
-                    bmOr(wTile->rippleDifference, wDifference);
-                    bmNot(wDifference);
-                    bmAnd(wTile->validBlockMask, wDifference);
-                }
-            }
-
+            processChildTile(self, tID, CARD_N, nDifference, changedTiles, &toVisit);
+            processChildTile(self, tID, CARD_S, sDifference, changedTiles, &toVisit);
+            processChildTile(self, tID, CARD_E, eDifference, changedTiles, &toVisit);
+            processChildTile(self, tID, CARD_W, wDifference, changedTiles, &toVisit);
 
         }
     }

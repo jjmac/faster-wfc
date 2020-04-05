@@ -169,6 +169,9 @@ void bsetLock(BlockSet self) {
     }
 }
 
+unsigned int bsetLen(BlockSet self) {
+    return self->len;
+}
 Block bsetLookup(BlockSet self, unsigned int blockID) {
     return self->blocks[blockID];
 }

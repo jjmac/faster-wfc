@@ -10,16 +10,21 @@ int main(int argc, char** argv) {
 
     BlockSet bset = bsetCreate( 2 );
 
-//    bsetAppend(bset, blCreateFromString(2, "aa.."));
-//    bsetAppend(bset, blCreateFromString(2, "..aa"));
+//    bsetAppend(bset, blCreateFromString(2, "aaaa"));
+
+    bsetAppend(bset, blCreateFromString(2, "..aa"));
+    bsetAppend(bset, blCreateFromString(2, "aa.."));
+/*
     bsetAppend(bset, blCreateFromString(2, "aaaa"));
     bsetAppend(bset, blCreateFromString(2, "bbbb"));
     bsetAppend(bset, blCreateFromString(2, "cccc"));
     bsetAppend(bset, blCreateFromString(2, "dddd"));
+    bsetAppend(bset, blCreateFromString(2, "dddd"));
+*/
 
     bsetLock(bset);
 
-    Context con = coCreate( 2,2 );
+    Context con = coCreate( 4, 1 );
     Engine en = enCreate(bset, con, 0);
 
     enRun(en);
