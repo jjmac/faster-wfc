@@ -8,6 +8,8 @@
 #include "blocksets.h"
 #include "tiles.h"
 
+static void innerHeapRemove(Context self, unsigned int curIndex);
+
 Context coCreate(unsigned short xSize, unsigned short ySize) {
     Context self = malloc(sizeof(struct context));
     self->xSize = xSize;
@@ -65,16 +67,30 @@ void coHeappush(Context self, unsigned int tID) {
     self->tiles[tID].heapIndex = curIndex;
 }
 unsigned int coHeappop(Context self) {
+    unsigned int retVal = self->eHeap[1];
+    innerHeapRemove(self, 1);
+    return retVal;
+}
+
+void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
+    coHeapremove(self, tID);
+    tiRefreshValues(self, bset, tID);
+    if (self->tiles[tID].entropy > 0) {
+        coHeappush(self, tID);
+    }
+}
+
+void coHeapremove(Context self, unsigned int tID) {
+    innerHeapRemove(self, self->tiles[tID].heapIndex);
+}
+
+static void innerHeapRemove(Context self, unsigned int curIndex) {
     unsigned int * eHeap = self->eHeap;
     tile * tiles = self->tiles;
 
-    unsigned int retVal = eHeap[1];
-
-    unsigned int curIndex = 1;
-    unsigned int lIndex = 2;
-    unsigned int rIndex = 3;
-
     while(1) {
+        unsigned int lIndex = curIndex*2;
+        unsigned int rIndex = lIndex+1;
         if (lIndex == eHeap[0]) {
             eHeap[curIndex] = eHeap[lIndex];
             break;
@@ -88,15 +104,8 @@ unsigned int coHeappop(Context self) {
             eHeap[curIndex] = eHeap[rIndex];
             curIndex = rIndex;
         }
-        lIndex = curIndex*2;
-        rIndex = lIndex+1;
     }
     eHeap[0]--;
-    return retVal;
-}
-
-void coHeaprefresh(Context self, unsigned int tID) {
-    assert (0);
 }
 
 void tiRefreshValues(Context self, BlockSet bset, unsigned int tID) {

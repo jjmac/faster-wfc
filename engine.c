@@ -99,7 +99,7 @@ static int advance(Engine self) {
     tiCollapseTo(self->context, tID, block);
     printf(" Done tile collapse!\n");
 
-    unsigned int * changedTiles = malloc(sizeof(unsigned int) * 100);
+    unsigned int * changedTiles = malloc(sizeof(unsigned int) * 900);
     if (rippleChangesFrom(self, tID, changedTiles)) {
         printf(" Finished rippleChangesFrom() - now refreshing freq/entropy values!\n");
         printf(" Got %d changed tiles: ", changedTiles[0]);
@@ -109,9 +109,8 @@ static int advance(Engine self) {
         printf("\n");
 
         for (int k = 1; k <= changedTiles[0]; k++) {
-            tiRefreshValues(self->context, self->blockSet, changedTiles[k]);
+            tiHeapRefresh(self->context, self->blockSet, changedTiles[k]);
         }
-
         tiRefreshValues(self->context, self->blockSet, tID);
         return 1;
     } else {
@@ -175,7 +174,7 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
             assert(1==0);
     }
 
-    printf("      - In ChildTile (%d, %d) / pot removing:", xTileID(ctID), yTileID(ctID));
+    printf("      - In ChildTile (%d, %d) / p rmv:", xTileID(ctID), yTileID(ctID));
     bmPrint(cDifference);
     printf("\n");
 
@@ -183,17 +182,27 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
     unsigned int diffBlockIDs[bsetLen(blockSet) + 1];
 
     cTile = &(context->tiles[ctID]);
-    printf("     - Adj sTile (%d, %d) with vbm:", xtil(ctID), ytil(ctID));
+    printf("        - Adj sTile (%d, %d) with vbm:", xtil(ctID), ytil(ctID));
     bmPrint(cTile->validBlockMask);
     printf("\n");
 
     bmAnd(cDifference, cTile->validBlockMask);
     bmFastCherrypick(cDifference, diffBlockIDs);
     unsigned int index = diffBlockIDs[0];
+
+    printf("        - After cherrypick cDiff is:");
+    bmPrint(cDifference);
+    printf("\n");
+
     while (index > 0) {
+        printf("          - Would add(?) block %d\n", diffBlockIDs[index]);
         Block curBlock = bsetLookup(blockSet, diffBlockIDs[index--]);
-        if ( bmAndValue(curBlock->overlapMasks[CARD_S], curTile->validBlockMask ) ) {
-            blbmRemove(curBlock, cDifference);
+
+        if (! bmAndValue(curBlock->overlapMasks[dir], curTile->validBlockMask ) ) {
+            blbmAdd(curBlock, cDifference);
+            printf("          - Actually adding block %d, leaves cDiff as:", diffBlockIDs[index+1]);
+            bmPrint(cDifference);
+            printf("\n");
         }
     }
 

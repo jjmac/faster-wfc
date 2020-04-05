@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
 
     bsetLock(bset);
 
-    Context con = coCreate( 4, 1 );
+    Context con = coCreate( 20, 20 );
     Engine en = enCreate(bset, con, 0);
 
     enRun(en);
