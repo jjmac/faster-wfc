@@ -249,7 +249,11 @@ void bsetLock(BlockSet self) {
 
         curBlock->fieldIndex = absIndex / FIELD_LEN;
         curBlock->bitIndex = absIndex % FIELD_LEN;
-        curBlock->localMask = 1ULL << (absIndex % 64);
+//        printf("FieldLen is %d, absIndex is %d, bitINdex is %d\n", FIELD_LEN, absIndex, curBlock->bitIndex);
+        curBlock->localMask = 1ULL << curBlock->bitIndex;
+//        printf("Shifted is %llu | mask:", curBlock->localMask);
+//        bmFieldPrint(curBlock->localMask);
+//        printf("\n");
 
         blbmAdd(curBlock, self->allTrueMask);
 
@@ -334,9 +338,19 @@ void bsetEntropy(BlockSet self, Bitmask bm, unsigned int * freq, float * entropy
 
     for (int k = self->len - 1; k >= 0; k--) {
         Block block = bsetLookup(self, k);
+//        printf ("    Ablock || bitIndex %u / fieldIndex %u || fieldMask:", block->bitIndex, block->fieldIndex);
+//        bmFieldPrint(block->localMask);
+//        printf("\n");
+
         if (blbmContains(block, bm)) {
             *freq += block->freq;
             innerSum += block->freq * log2(block->freq);
+//            printf ("    blockFreq %d, total %d || bitIndex %u / fieldIndex %u || fieldMask:", *freq, block->freq, block->bitIndex, block->fieldIndex);
+
+//            Bitmask t = bmCreate(bm->len);
+//            blbmAdd(block, t);
+//            bmFieldPrint(block->localMask);
+//            printf("\n");
         }
     }
     *entropy = log2(*freq) - (innerSum / *freq);

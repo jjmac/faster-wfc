@@ -121,7 +121,12 @@ void blbmSet(Block self, Bitmask bm) {
     bm->fields[self->fieldIndex] |= self->localMask;
 }
 int blbmContains(Block self, Bitmask bm) {
-    return bm->fields[self->fieldIndex] & self->localMask;
+/*    printf ("        Running blbmContains between:\n        --");
+    bmFieldPrint(bm->fields[self->fieldIndex]);
+    printf("\n        --");
+    bmFieldPrint(self->localMask);
+    printf("\n");*/
+    return (bm->fields[self->fieldIndex] & self->localMask) > 0;
 }
 
 

@@ -14,7 +14,7 @@ BlockSet bsDefault3();
 
 int main(int argc, char** argv) {
 
-    BlockSet bset = bsDefault1();
+    BlockSet bset = bsDefault2();
 
 //    BlockSet bset = bsetCreate( 2 );
 
@@ -32,9 +32,10 @@ int main(int argc, char** argv) {
 
     bsetLock(bset);
 
-    Context con = coCreate( 10, 10 );
+    Context con = coCreate( 2, 2 );
     Engine en = enCreate(bset, con, 0);
 
+//    enPrepare(en);
     enRun(en);
 
     return 0;

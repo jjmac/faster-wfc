@@ -11,6 +11,7 @@ struct bitmask {
 Bitmask bmCreate(int len);
 void bmDestroy(Bitmask old);
 void bmPrint(Bitmask self);
+void bmFieldPrint(field cur);
 
 int bmFalse(Bitmask self);
 int bmTrue(Bitmask self);

@@ -19,9 +19,15 @@ void bmDestroy(Bitmask self) {
     free(self);
 }
 
+void bmFieldPrint(field cur) {
+    for (field digitMask = HIGH_BIT; digitMask>0; digitMask = digitMask >> 1) {
+        putchar(cur&digitMask ? '1' : '0');
+    }
+}
+
 void bmPrint(Bitmask self) {
     field cur;
-    for(int k = 0; k < self->len; k++) {
+    for(int k = self->len-1; k >= 0; k--) {
         cur = self->fields[k];
 
         #if DPRINT_BINARY
@@ -31,6 +37,7 @@ void bmPrint(Bitmask self) {
         # else
             printf("%llu ", cur);
         #endif
+        putchar('_');
     }
 }
 
@@ -132,10 +139,10 @@ Bitmask nbmXor(Bitmask b1, Bitmask b2){
     return new;
 }
 
-int VLOOKUPS[67] = { 0, 0, 1, 39, 2, 15, 40, 23, 3, 12, 16, 59, 41, 19, 24, 54, 4, 0, 13, 10, 17,
+unsigned int VLOOKUPS[67] = { 0, 0, 1, 39, 2, 15, 40, 23, 3, 12, 16, 59, 41, 19, 24, 54, 4, 0, 13, 10, 17,
 62, 60, 28, 42, 30, 20, 51, 25, 44, 55, 47, 5, 32, 0, 38, 14, 22, 11, 58,
 18, 53, 63, 9, 61, 27, 29, 50, 43, 46, 31, 37, 21, 57, 52, 8, 26, 49, 45, 36,
-56, 7, 48, 35, 6, 0, 0 };  // A mapping from (2^n) % 67 to n.  Has the property that 2^n % 67 gives a unique result for all n in 0..64
+56, 7, 48, 35, 6, 34, 33 };  // A mapping from (2^n) % 67 to n.  Has the property that 2^n % 67 gives a unique result for all n in 0..64
 
 /// does not work!
 void bmCherrypick(Bitmask self, unsigned int * output) {
@@ -156,11 +163,17 @@ void bmFastCherrypick(Bitmask self, unsigned int * output) {
 //    printf("\n");
 //    printf("    Output x is %p\n", output);
     int oLen = 0;
-    for(int k = self->len-1; k >= 0; k--) {
+    for(unsigned int k = self->len-1; k != -1; k--) {
 //        printf("    -- Checking field %d it is %llx\n", k, self->fields[k]);
         while (self->fields[k]) {
             field nextVal = (self->fields[k]-1) & self->fields[k];
-//            printf("    Nextval is %llx\n", nextVal);
+//            printf("    %llu & %llu = Nextval is %llu\n", self->fields[k]-1ULL, self->fields[k], nextVal);
+            field intermNextVal = (nextVal ^ self->fields[k]);
+//            printf("    Intermediate nextval is %llu\n", intermNextVal);
+//            printf("    Prevlookups is %llu\n", intermNextVal % 67ULL);
+            intermNextVal = VLOOKUPS[intermNextVal % 67ULL];
+//            printf("    Intermediate-2 nextval is %llu\n", intermNextVal);
+//            printf("    Reduced nextVal is %u\n", VLOOKUPS[(nextVal ^ self->fields[k]) % 67] + (FIELD_LEN * k));
             output[++oLen] = VLOOKUPS[(nextVal ^ self->fields[k]) % 67] + (FIELD_LEN * k);
             self->fields[k] = nextVal;
 //            printf("    Aftand selfield is %llx\n", self->fields[k]);

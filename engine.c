@@ -188,12 +188,21 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
     printf("\n");
 
     bmAnd(cDifference, cTile->validBlockMask);
+
+    printf("      - After bmAnd, cDifference is:");
+    bmPrint(cDifference);
+    printf("\n");
+
     bmFastCherrypick(cDifference, diffBlockIDs);
     unsigned int index = diffBlockIDs[0];
 
-    printf("        - After cherrypick cDiff is:");
-    bmPrint(cDifference);
+    printf ("      - Printing diffBlockIDs:");
+    while (index > 0) {
+        printf("%d,", diffBlockIDs[index]);
+        index--;
+    }
     printf("\n");
+    index = diffBlockIDs[0];
 
     while (index > 0) {
         printf("          - Would add(?) block %d\n", diffBlockIDs[index]);

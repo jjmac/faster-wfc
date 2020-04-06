@@ -9,7 +9,6 @@ struct block {
     unsigned char fieldIndex;
     unsigned char bitIndex;
     field localMask;
-    Bitmask fullMask;
 
     Bitmask overlapMasks[4];
 };
