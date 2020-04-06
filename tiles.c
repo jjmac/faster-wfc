@@ -64,7 +64,7 @@ void coHeapPush(Context self, unsigned int tID) {
     float entropy = self->tiles[tID].entropy;
 
     while(nextIndex > 0) {
-        if (tiles[eHeap[nextIndex]].entropy < entropy) {
+        if (tiles[eHeap[nextIndex]].entropy > entropy) {
             tiles[eHeap[nextIndex]].heapIndex = curIndex;
             eHeap[curIndex] = eHeap[nextIndex];
             curIndex = nextIndex;
@@ -76,6 +76,7 @@ void coHeapPush(Context self, unsigned int tID) {
     eHeap[curIndex] = tID;
     self->tiles[tID].heapIndex = curIndex;
 }
+
 unsigned int coHeapPop(Context self) {
     unsigned int retVal = self->eHeap[1];
     innerHeapRemove(self, 1);
@@ -101,11 +102,26 @@ static void innerHeapRemove(Context self, unsigned int curIndex) {
     while(1) {
         unsigned int lIndex = curIndex*2;
         unsigned int rIndex = lIndex+1;
+
+        printf ("DURING HEAPPOP - curIndex %d (lIndex %d, rIndex %d)\n", curIndex, lIndex, rIndex);
+        coHeapPrint(self);
+
         if (lIndex == eHeap[0]) {
             eHeap[curIndex] = eHeap[lIndex];
             self->tiles[eHeap[curIndex]].heapIndex = curIndex;
             break;
         } else if (lIndex > eHeap[0]) {
+            unsigned int endIndex = self->eHeap[0];
+
+            if (endIndex != curIndex) {
+                if (tiles[eHeap[endIndex]].entropy > tiles[eHeap[curIndex]].entropy) {
+                    eHeap[curIndex / 2] = eHeap[endIndex];
+                    self->tiles[eHeap[endIndex]].heapIndex = curIndex/2;
+                } else {
+                    eHeap[curIndex] = eHeap[endIndex];
+                    self->tiles[eHeap[endIndex]].heapIndex = curIndex;
+                }
+            }
             break;
         }
         if (tiles[eHeap[lIndex]].entropy < tiles[eHeap[rIndex]].entropy) {
@@ -118,6 +134,8 @@ static void innerHeapRemove(Context self, unsigned int curIndex) {
             curIndex = rIndex;
         }
     }
+    printf ("just finished heappop, about to lose last element\n");
+    coHeapPrint(self);
     eHeap[0]--;
 }
 
