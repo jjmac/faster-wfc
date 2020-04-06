@@ -262,23 +262,28 @@ void bsetLock(BlockSet self) {
         curBlock->overlapMasks[CARD_E] = bmCreate(numFields);
         curBlock->overlapMasks[CARD_W] = bmCreate(numFields);
 
+        bmClear(curBlock->overlapMasks[CARD_N]);
+        bmClear(curBlock->overlapMasks[CARD_S]);
+        bmClear(curBlock->overlapMasks[CARD_E]);
+        bmClear(curBlock->overlapMasks[CARD_W]);
+
         blMarkOverlaps(curBlock, curBlock, CARD_N);
-        blMarkOverlaps(curBlock, curBlock, CARD_W);
-        blMarkOverlaps(curBlock, curBlock, CARD_E);
         blMarkOverlaps(curBlock, curBlock, CARD_S);
+        blMarkOverlaps(curBlock, curBlock, CARD_E);
+        blMarkOverlaps(curBlock, curBlock, CARD_W);
 
         for (int innerIndex = absIndex-1; innerIndex >= 0; innerIndex--) {
             innerBlock = self->blocks[innerIndex];
 
             blMarkOverlaps(curBlock, innerBlock, CARD_N);
-            blMarkOverlaps(curBlock, innerBlock, CARD_W);
-            blMarkOverlaps(curBlock, innerBlock, CARD_E);
             blMarkOverlaps(curBlock, innerBlock, CARD_S);
+            blMarkOverlaps(curBlock, innerBlock, CARD_E);
+            blMarkOverlaps(curBlock, innerBlock, CARD_W);
 
             blMarkOverlaps(innerBlock, curBlock, CARD_N);
-            blMarkOverlaps(innerBlock, curBlock, CARD_W);
-            blMarkOverlaps(innerBlock, curBlock, CARD_E);
             blMarkOverlaps(innerBlock, curBlock, CARD_S);
+            blMarkOverlaps(innerBlock, curBlock, CARD_E);
+            blMarkOverlaps(innerBlock, curBlock, CARD_W);
         }
 
         self->blocks[absIndex] = curBlock;

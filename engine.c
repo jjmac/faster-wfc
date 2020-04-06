@@ -128,9 +128,6 @@ struct visitNode {
     VisitNode next;
 };
 
-#define xtil(tID) (tID % context->xSize)
-#define ytil(tID) (tID / context->xSize)
-
 #define xTileID(tID) (tID % context->xSize)
 #define yTileID(tID) (tID / context->xSize)
 
@@ -183,7 +180,7 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
     unsigned int diffBlockIDs[bsetLen(bset) + 1];
 
     cTile = &(context->tiles[ctID]);
-    printf("        - Adj sTile (%d, %d) with vbm:", xtil(ctID), ytil(ctID));
+    printf("        - Adj sTile (%d, %d) with vbm:", xTileID(ctID), yTileID(ctID));
     bmPrint(cTile->validBlockMask);
     printf("\n");
 
@@ -228,6 +225,7 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
         bmNot(cDifference);
         bmAnd(cTile->validBlockMask, cDifference);
     }
+
     return 1;
 }
 
@@ -267,6 +265,11 @@ static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * chang
             Bitmask eDifference = bmCreate(curDifference->len);
             Bitmask wDifference = bmCreate(curDifference->len);
 
+            bmClear(nDifference);
+            bmClear(sDifference);
+            bmClear(eDifference);
+            bmClear(wDifference);
+
             bmFastCherrypick(curDifference, diffBlockIDs);
             unsigned int index = diffBlockIDs[0];
             while (index > 0) {
@@ -276,7 +279,39 @@ static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * chang
                 bmOr(sDifference, curBlock->overlapMasks[CARD_S]);
                 bmOr(eDifference, curBlock->overlapMasks[CARD_E]);
                 bmOr(wDifference, curBlock->overlapMasks[CARD_W]);
+
+
+                printf("   - appending to nDifference:");
+                bmPrint(curBlock->overlapMasks[CARD_N]);
+                printf("\n");
+
+
+                printf("   - appending to sDifference:");
+                bmPrint(curBlock->overlapMasks[CARD_S]);
+                printf("\n");
+                /*
+                printf("   - Adjusting eDifference:");
+                bmPrint(eDifference);
+                printf("\n");
+                printf("   - Adjusting wDifference:");
+                bmPrint(wDifference);
+                printf("\n");
+                */
+
             }
+
+            printf("   - Created nDifference:");
+            bmPrint(nDifference);
+            printf("\n");
+            printf("   - Created sDifference:");
+            bmPrint(sDifference);
+            printf("\n");
+            printf("   - Created eDifference:");
+            bmPrint(eDifference);
+            printf("\n");
+            printf("   - Created wDifference:");
+            bmPrint(wDifference);
+            printf("\n");
 
             processChildTile(self, tID, CARD_N, nDifference, changedTiles, &toVisit);
             processChildTile(self, tID, CARD_S, sDifference, changedTiles, &toVisit);

@@ -45,6 +45,26 @@ const unsigned char sOverlaps3[12] = {
     flat2(1,2), flat2(1,1),
     flat2(2,2), flat2(2,1),
 };
+const unsigned char eOverlaps3[12] = {
+    flat2(0,0), flat2(1,0),
+    flat2(0,1), flat2(1,1),
+    flat2(0,2), flat2(1,2),
+
+    flat2(1,0), flat2(2,0),
+    flat2(1,1), flat2(2,1),
+    flat2(1,2), flat2(2,2)
+
+};
+const unsigned char wOverlaps3[12] = {
+    flat2(1,0), flat2(0,0),
+    flat2(1,1), flat2(0,1),
+    flat2(1,2), flat2(0,2),
+
+    flat2(2,0), flat2(1,0),
+    flat2(2,1), flat2(1,1),
+    flat2(2,2), flat2(1,2)
+};
+
 
 const unsigned char nOverlaps2[4] = {
     flat2(0,0), flat2(0,1),
@@ -160,20 +180,68 @@ void blMarkOverlaps(Block self, Block other, cardinal dir) {
     const unsigned char * oPairs;
     switch(dir){
         case CARD_N:
-            oPairs = nOverlaps2;
+            switch(self->size) {
+                case 2:
+                    oPairs = nOverlaps2;
+                    break;
+                case 3:
+                    oPairs = nOverlaps3;
+                    break;
+                case 4:
+                    assert(1==0);
+                    break;
+                default:
+                    assert(1==0);
+            }
             break;
         case CARD_W:
-            oPairs = wOverlaps2;
+            switch(self->size) {
+                case 2:
+                    oPairs = wOverlaps2;
+                    break;
+                case 3:
+                    oPairs = wOverlaps3;
+                    break;
+                case 4:
+                    assert(1==0);
+                    break;
+                default:
+                    assert(1==0);
+            }
             break;
         case CARD_E:
-            oPairs = eOverlaps2;
+            switch(self->size) {
+                case 2:
+                    oPairs = eOverlaps2;
+                    break;
+                case 3:
+                    oPairs = eOverlaps3;
+                    break;
+                case 4:
+                    assert(1==0);
+                    break;
+                default:
+                    assert(1==0);
+            }
             break;
         case CARD_S:
-            oPairs = sOverlaps2;
+            switch(self->size) {
+                case 2:
+                    oPairs = sOverlaps2;
+                    break;
+                case 3:
+                    oPairs = sOverlaps3;
+                    break;
+                case 4:
+                    assert(1==0);
+                    break;
+                default:
+                    assert(1==0);
+            }
             break;
     }
 
-    for (int k=0; k<2*OVERLAPS_LEN(2) ; k+= 2) {
+    for (int k=0; k<2*OVERLAPS_LEN(self->size); k+= 2) {
         #if DPRINT_OVERLAPS
             printf("Comparing pos %d (%c) to (%c) %d\n", oPairs[k], self->values[oPairs[k]], other->values[oPairs[k+1]], oPairs[k+1]);
         #endif

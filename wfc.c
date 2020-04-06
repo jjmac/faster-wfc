@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
     bsetLock(bset);
 
-    Context con = coCreate( 2, 2 );
+    Context con = coCreate( 3, 3 );
     Engine en = enCreate(bset, con, 0);
 
 //    enPrepare(en);
