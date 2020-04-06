@@ -6,7 +6,7 @@
 #include "bitmasks.h"
 #include "blocks.h"
 
-#define DPRINT_OVERLAPS  0
+#define DPRINT_OVERLAPS  1
 #define DPRINT_OVERLAP_CHECKS  0
 
 #define flat2(x,y) (x+y*2)
@@ -28,41 +28,41 @@
 const unsigned char nOverlaps4[24] = {};
 
 const unsigned char nOverlaps3[12] = {
-    flat2(0,0), flat2(0,1),
-    flat2(1,0), flat2(1,1),
-    flat2(2,0), flat2(2,1),
+    flat3(0,0), flat3(0,1),
+    flat3(1,0), flat3(1,1),
+    flat3(2,0), flat3(2,1),
 
-    flat2(0,1), flat2(0,2),
-    flat2(1,1), flat2(1,2),
-    flat2(2,1), flat2(2,2),
+    flat3(0,1), flat3(0,2),
+    flat3(1,1), flat3(1,2),
+    flat3(2,1), flat3(2,2),
 };
 const unsigned char sOverlaps3[12] = {
-    flat2(0,1), flat2(0,0),
-    flat2(1,1), flat2(1,0),
-    flat2(2,1), flat2(2,0),
+    flat3(0,1), flat3(0,0),
+    flat3(1,1), flat3(1,0),
+    flat3(2,1), flat3(2,0),
 
-    flat2(0,2), flat2(0,1),
-    flat2(1,2), flat2(1,1),
-    flat2(2,2), flat2(2,1),
+    flat3(0,2), flat3(0,1),
+    flat3(1,2), flat3(1,1),
+    flat3(2,2), flat3(2,1),
 };
 const unsigned char eOverlaps3[12] = {
-    flat2(0,0), flat2(1,0),
-    flat2(0,1), flat2(1,1),
-    flat2(0,2), flat2(1,2),
+    flat3(0,0), flat3(1,0),
+    flat3(0,1), flat3(1,1),
+    flat3(0,2), flat3(1,2),
 
-    flat2(1,0), flat2(2,0),
-    flat2(1,1), flat2(2,1),
-    flat2(1,2), flat2(2,2)
+    flat3(1,0), flat3(2,0),
+    flat3(1,1), flat3(2,1),
+    flat3(1,2), flat3(2,2)
 
 };
 const unsigned char wOverlaps3[12] = {
-    flat2(1,0), flat2(0,0),
-    flat2(1,1), flat2(0,1),
-    flat2(1,2), flat2(0,2),
+    flat3(1,0), flat3(0,0),
+    flat3(1,1), flat3(0,1),
+    flat3(1,2), flat3(0,2),
 
-    flat2(2,0), flat2(1,0),
-    flat2(2,1), flat2(1,1),
-    flat2(2,2), flat2(1,2)
+    flat3(2,0), flat3(1,0),
+    flat3(2,1), flat3(1,1),
+    flat3(2,2), flat3(1,2)
 };
 
 

@@ -16,7 +16,11 @@ int main(int argc, char** argv) {
 
     BlockSet bset = bsDefault2();
 
-//    BlockSet bset = bsetCreate( 2 );
+//    BlockSet bset = bsetCreate( 3 );
+
+//    bsetAppend(bset, blCreateFromString(3, "aaa...bbb"));
+//    bsetAppend(bset, blCreateFromString(3, "...aaa..."));
+
 
 //    bsetAppend(bset, blCreateFromString(2, "aaaa"));
 
@@ -63,7 +67,7 @@ BlockSet bsDefault2() {
     Grid grid = grCreateFromString(preset, 3, 3);
     grPrint(grid);
 
-    BlockSet bset = bsetCreateFromGrid(grid, 3, 1,1);
+    BlockSet bset = bsetCreateFromGrid(grid, 3, 0,0);
     bsetPrint(bset);
     return bset;
 }
