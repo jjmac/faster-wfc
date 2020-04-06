@@ -1,6 +1,6 @@
 typedef struct engine * Engine;
 
-Engine enCreate(BlockSet blockSet, Context context, int rSeed);
+Engine enCreate(BlockSet bset, Context context, int rSeed);
 void enDestroy(Engine self);
 void enRun(Engine self);
 

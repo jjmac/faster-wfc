@@ -1,6 +1,7 @@
 typedef struct blockSet * BlockSet;
 
 BlockSet bsetCreate(unsigned char size);
+BlockSet bsetCreateFromGrid(Grid grid, unsigned char size);
 void bsetDestroy(BlockSet self);
 void bsetPrint(BlockSet self);
 

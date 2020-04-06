@@ -2,8 +2,10 @@
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>
+#include <string.h>
 
 #include "cardinals.h"
+#include "grids.h"
 #include "bitmasks.h"
 #include "blocks.h"
 #include "blocksets.h"
@@ -40,6 +42,48 @@ BlockSet bsetCreate(unsigned char size) {
     self->blockList = NULL;
     return self;
 }
+
+BlockSet bsetCreateFromGrid(Grid grid, unsigned char size) {
+    BlockSet self = bsetCreate(size);
+
+    char * allStrs[grid->xSize * grid->ySize];
+    int freqs[grid->xSize * grid->ySize];
+    int len;
+
+    for (unsigned int x = grid->xSize-1; x != -1; x--) {
+        for (unsigned int y = grid->ySize-1; y != -1; y--) {
+            char * curStr = malloc(sizeof(char) * size * size);
+            int curPos = 0;
+            for (unsigned int yShift = 0; yShift < size; yShift++) {
+                for (unsigned int xShift = 0; xShift < size; xShift++) {
+                    curStr[curPos++] = grLookup(grid, (x+xShift) % grid->xSize, (y+yShift) % grid->ySize );
+                }
+            }
+
+            for (int k = 0; k < len; k++) {
+                if (strncmp(curStr, allStrs[k], (size*size)) == 0) {
+                    freqs[k]++;
+                    free(curStr);
+                    goto out;
+                }
+            }
+            freqs[len] = 1;
+            allStrs[len++] = curStr;
+            out:
+            ;
+        }
+    }
+
+    for (int k = 0; k < len; k++) {
+        Block block = blCreateFromString( size, allStrs[k] );
+        block->freq = freqs[k];
+        bsetAppend(self, block);
+        free(allStrs[k]);
+    }
+
+    return self;
+}
+
 
 void bsetDestroy(BlockSet self) {
     if (self->locked) {
@@ -81,7 +125,7 @@ void bsetPrint(BlockSet self) {
 static void bsetPrintLocked(BlockSet self) {
     for (int k = 0; k < self->len; k++){
         Block curBlock = self->blocks[k];
-        printf("BLOCK %d:\n", absIndex(curBlock));
+        printf("BLOCK %d (freq %d):\n", absIndex(curBlock), curBlock->freq);
         blPrint(curBlock);
         #if DPRINT_LOCKED_DATA
             blPrintData(curBlock);
@@ -93,7 +137,7 @@ static void bsetPrintLocked(BlockSet self) {
 static void bsetPrintUnlocked(BlockSet self) {
     BlockListNode curNode = self->blockList;
     while (curNode != NULL) {
-        printf("BLOCK :\n");
+        printf("BLOCK (freq %d):\n", curNode->value->freq);
         blPrint(curNode->value);
         curNode = curNode->next;
         printf("\n");

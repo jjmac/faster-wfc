@@ -3,6 +3,7 @@
 #include <assert.h>
 
 #include "cardinals.h"
+#include "grids.h"
 #include "bitmasks.h"
 #include "blocks.h"
 #include "blocksets.h"
