@@ -43,34 +43,107 @@ BlockSet bsetCreate(unsigned char size) {
     return self;
 }
 
-BlockSet bsetCreateFromGrid(Grid grid, unsigned char size) {
+enum transform {
+    IN_PLACE,
+    ROT_90,
+    ROT_180,
+    ROT_270,
+    REFL,
+    REFL_ROT_90,
+    REFL_ROT_180,
+    REFL_ROT_270,
+    INVALID_TRANSFORM
+};
+
+BlockSet bsetCreateFromGrid(Grid grid, unsigned char size, int rotations, int reflections) {
     BlockSet self = bsetCreate(size);
 
-    char * allStrs[grid->xSize * grid->ySize];
-    int freqs[grid->xSize * grid->ySize];
-    int len;
+    unsigned int xSize = grid->xSize;
+    unsigned int ySize = grid->ySize;
 
-    for (unsigned int x = grid->xSize-1; x != -1; x--) {
-        for (unsigned int y = grid->ySize-1; y != -1; y--) {
-            char * curStr = malloc(sizeof(char) * size * size);
-            int curPos = 0;
-            for (unsigned int yShift = 0; yShift < size; yShift++) {
-                for (unsigned int xShift = 0; xShift < size; xShift++) {
-                    curStr[curPos++] = grLookup(grid, (x+xShift) % grid->xSize, (y+yShift) % grid->ySize );
+    char * allStrs[xSize * ySize * 8];
+    int freqs[xSize * ySize * 8];
+    int len = 0;
+
+    enum transform curTransform;
+
+    for (unsigned int x = xSize-1; x != -1; x--) {
+        for (unsigned int y = ySize-1; y != -1; y--) {
+            curTransform = IN_PLACE;
+            while (curTransform != INVALID_TRANSFORM) {
+                char * curStr = malloc(sizeof(char) * size * size);
+                int curPos = 0;
+                for (unsigned int yShift = 0; yShift < size; yShift++) {
+                    for (unsigned int xShift = 0; xShift < size; xShift++) {
+                        switch(curTransform) {
+                            case IN_PLACE:
+                                curStr[curPos++] = grLookup(grid, (x+xShift) % xSize, (y+yShift) % ySize );
+                                break;
+                            case ROT_90:
+                                curStr[curPos++] = grLookup(grid, (x+(size-yShift)-1) % xSize, (y+xShift) % ySize );
+                                break;
+                            case ROT_180:
+                                curStr[curPos++] = grLookup(grid, (x+(size-xShift)-1) % xSize, (y+(size-yShift)-1) % ySize );
+                                break;
+                            case ROT_270:
+                                curStr[curPos++] = grLookup(grid, (x+yShift) % xSize, (y+(size-xShift)-1) % ySize );
+                                break;
+                            case REFL:
+                                curStr[curPos++] = grLookup(grid, (x+yShift) % xSize, (y+xShift) % ySize );
+                                break;
+                            case REFL_ROT_90:
+                                curStr[curPos++] = grLookup(grid, (x+(size-xShift)-1) % xSize, (y+yShift) % ySize );
+                                break;
+                            case REFL_ROT_180:
+                                curStr[curPos++] = grLookup(grid, (x+(size-yShift)-1) % xSize, (y+(size-xShift)-1) % ySize );
+                                break;
+                            case REFL_ROT_270:
+                                curStr[curPos++] = grLookup(grid, (x+xShift) % xSize, (y+(size-yShift)-1) % ySize );
+                                break;
+                            default:
+                                assert(0 == 1);
+                        }
+                    }
+                }
+
+                for (int k = 0; k < len; k++) {
+                    if (strncmp(curStr, allStrs[k], (size*size)) == 0) {
+                        freqs[k]++;
+                        free(curStr);
+                        goto out;
+                    }
+                }
+                freqs[len] = 1;
+                allStrs[len++] = curStr;
+                out:
+                switch(curTransform) {
+                    case IN_PLACE:
+                        if (rotations){
+                            curTransform++;
+                        } else if (reflections) {
+                            curTransform = REFL;
+                        } else {
+                            curTransform = INVALID_TRANSFORM;
+                        }
+                        break;
+                    case ROT_270:
+                        if (reflections) {
+                            curTransform++;
+                        } else {
+                            curTransform = INVALID_TRANSFORM;
+                        }
+                        break;
+                    case REFL:
+                        if (rotations) {
+                            curTransform++;
+                        } else {
+                            curTransform = INVALID_TRANSFORM;
+                        }
+                        break;
+                    default:
+                        curTransform++;
                 }
             }
-
-            for (int k = 0; k < len; k++) {
-                if (strncmp(curStr, allStrs[k], (size*size)) == 0) {
-                    freqs[k]++;
-                    free(curStr);
-                    goto out;
-                }
-            }
-            freqs[len] = 1;
-            allStrs[len++] = curStr;
-            out:
-            ;
         }
     }
 
@@ -276,7 +349,7 @@ char bsetBlockToValue(BlockSet self, Bitmask bm){
     for (int k = self->len - 1; k >= 0; k--) {
         Block block = bsetLookup(self, k);
         if (blbmContains(block, bm)) {
-            return '0' + k;
+//            return '0' + k;
             return block->values[0];
         }
     }

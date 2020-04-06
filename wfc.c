@@ -8,12 +8,13 @@
 #include <stdio.h>
 
 BlockSet bsDefault1();
+BlockSet bsDefault2();
+BlockSet bsDefault3();
 
 
 int main(int argc, char** argv) {
 
     BlockSet bset = bsDefault1();
-    return 0;
 
 //    BlockSet bset = bsetCreate( 2 );
 
@@ -31,7 +32,7 @@ int main(int argc, char** argv) {
 
     bsetLock(bset);
 
-    Context con = coCreate( 20, 20 );
+    Context con = coCreate( 10, 10 );
     Engine en = enCreate(bset, con, 0);
 
     enRun(en);
@@ -41,6 +42,33 @@ int main(int argc, char** argv) {
 
 BlockSet bsDefault1() {
     char * preset = "" \
+    ".." \
+    "##";
+
+    Grid grid = grCreateFromString(preset, 2, 2);
+    grPrint(grid);
+
+    BlockSet bset = bsetCreateFromGrid(grid, 2, 1,0);
+    bsetPrint(bset);
+    return bset;
+}
+
+BlockSet bsDefault2() {
+    char * preset = "" \
+    "A+." \
+    "..." \
+    "xxx";
+
+    Grid grid = grCreateFromString(preset, 3, 3);
+    grPrint(grid);
+
+    BlockSet bset = bsetCreateFromGrid(grid, 3, 1,1);
+    bsetPrint(bset);
+    return bset;
+}
+
+BlockSet bsDefault3() {
+    char * preset = "" \
     "...." \
     "##.." \
     "..#." \
@@ -49,7 +77,7 @@ BlockSet bsDefault1() {
     Grid grid = grCreateFromString(preset, 4, 4);
     grPrint(grid);
 
-    BlockSet bset = bsetCreateFromGrid(grid, 3);
+    BlockSet bset = bsetCreateFromGrid(grid, 3, 1,1);
     bsetPrint(bset);
     return bset;
 }
