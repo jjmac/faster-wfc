@@ -24,10 +24,10 @@ Context coCreate(unsigned short xSize, unsigned short ySize);
 void coDestroy(Context self);
 void coPrint(Context self);
 
-void coHeappush(Context self, unsigned int tID);
-unsigned int coHeappop(Context self);
-void coHeaprefresh(Context self, unsigned int tID);
-void coHeapremove(Context self, unsigned int tID);
+void coHeapPrint(Context self);
+void coHeapPush(Context self, unsigned int tID);
+unsigned int coHeapPop(Context self);
+void coHeapRemove(Context self, unsigned int tID);
 
 void tiCollapseTo(Context self, unsigned int tID, Block block);
 void tiRefreshValues(Context self, BlockSet bset, unsigned int tID);

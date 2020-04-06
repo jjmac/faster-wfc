@@ -45,7 +45,16 @@ void coPrint(Context self) {
     }
 }
 
-void coHeappush(Context self, unsigned int tID) {
+void coHeapPrint(Context self) {
+    printf("Printing context heap with %d elements!\n", self->eHeap[0]);
+    for (int k = 1; k <= self->eHeap[0]; k++) {
+        tile t = self->tiles[self->eHeap[k]];
+        printf("  - H %d / %d | tile %d (%d, %d) | entropy %f\n", k, t.heapIndex, self->eHeap[k], self->eHeap[k] % self->xSize, self->eHeap[k] / self->xSize, t.entropy );
+    }
+
+}
+
+void coHeapPush(Context self, unsigned int tID) {
     unsigned int * eHeap = self->eHeap;
     tile * tiles = self->tiles;
 
@@ -67,21 +76,21 @@ void coHeappush(Context self, unsigned int tID) {
     eHeap[curIndex] = tID;
     self->tiles[tID].heapIndex = curIndex;
 }
-unsigned int coHeappop(Context self) {
+unsigned int coHeapPop(Context self) {
     unsigned int retVal = self->eHeap[1];
     innerHeapRemove(self, 1);
     return retVal;
 }
 
 void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
-    coHeapremove(self, tID);
+    coHeapRemove(self, tID);
     tiRefreshValues(self, bset, tID);
     if (self->tiles[tID].entropy > 0) {
-        coHeappush(self, tID);
+        coHeapPush(self, tID);
     }
 }
 
-void coHeapremove(Context self, unsigned int tID) {
+void coHeapRemove(Context self, unsigned int tID) {
     innerHeapRemove(self, self->tiles[tID].heapIndex);
 }
 
@@ -94,15 +103,18 @@ static void innerHeapRemove(Context self, unsigned int curIndex) {
         unsigned int rIndex = lIndex+1;
         if (lIndex == eHeap[0]) {
             eHeap[curIndex] = eHeap[lIndex];
+            self->tiles[eHeap[curIndex]].heapIndex = curIndex;
             break;
         } else if (lIndex > eHeap[0]) {
             break;
         }
         if (tiles[eHeap[lIndex]].entropy < tiles[eHeap[rIndex]].entropy) {
             eHeap[curIndex] = eHeap[lIndex];
+            self->tiles[eHeap[curIndex]].heapIndex = curIndex;
             curIndex = lIndex;
         } else {
             eHeap[curIndex] = eHeap[rIndex];
+            self->tiles[eHeap[curIndex]].heapIndex = curIndex;
             curIndex = rIndex;
         }
     }

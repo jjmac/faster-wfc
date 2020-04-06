@@ -54,7 +54,7 @@ void enPrepare(Engine self) {
         bmPrint(context->tiles[tID].validBlockMask);
         printf("\n");
 
-        coHeappush(context, tID);
+        coHeapPush(context, tID);
     }
 
     srand(self->rSeed);
@@ -63,6 +63,7 @@ void enPrepare(Engine self) {
 void enCoreLoop(Engine self) {
     while (self->context->eHeap[0]) {
         printf("= In core loop - advancing!\n");
+        coHeapPrint(self->context);
         advance(self);
     }
 }
@@ -84,11 +85,14 @@ static int advance(Engine self) {
     printf("In call to advance()!\n");
 
     // pick a tile to collapse
-    unsigned int tID = coHeappop(self->context);
+    unsigned int tID = coHeapPop(self->context);
 
     printf(" Got random tID: %d\n", tID);
 
     printf(" Tile blockmask is %p, freq %d\n", self->context->tiles[tID].validBlockMask, self->context->tiles[tID].freq);
+
+    coHeapPrint(self->context);
+
 
     // pick a block to collapse it to
     Block block = bsetRandom(self->bset, self->context->tiles[tID].validBlockMask, rand() % (self->context->tiles[tID].freq));
@@ -109,9 +113,16 @@ static int advance(Engine self) {
         }
         printf("\n");
 
+
+        coHeapPrint(self->context);
+
         for (int k = 1; k <= changedTiles[0]; k++) {
+            printf("-- changed tile %d\n", changedTiles[k]);
             tiHeapRefresh(self->context, self->bset, changedTiles[k]);
+            coHeapPrint(self->context);
         }
+        coHeapPrint(self->context);
+        printf("-- autochanged tile %d\n", tID);
         tiRefreshValues(self->context, self->bset, tID);
         return 1;
     } else {
