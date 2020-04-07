@@ -57,9 +57,9 @@ void enPrepare(Engine self) {
         context->tiles[tID].ctIndex = 0;
         tiRefreshValues(context, bset, tID);
 
-        printf("Tile %d has freq %d ent %f mask:", tID, context->tiles[tID].freq, context->tiles[tID].entropy);
-        bmPrint(context->tiles[tID].validBlockMask);
-        printf("\n");
+//        printf("Tile %d has freq %d ent %f mask:", tID, context->tiles[tID].freq, context->tiles[tID].entropy);
+//        bmPrint(context->tiles[tID].validBlockMask);
+//        printf("\n");
 
         coHeapPush(context, tID);
     }
@@ -71,8 +71,8 @@ void enPrepare(Engine self) {
 
 void enCoreLoop(Engine self) {
     while (self->context->eHeap[0]) {
-        printf("= In core loop - advancing!\n");
-        coHeapPrint(self->context);
+        printf("= In core loop - advancing (%d tiles remain)!\n", self->context->eHeap[0]);
+//        coHeapPrint(self->context);
         advance(self);
     }
 }
@@ -91,55 +91,54 @@ void enCleanup(Engine self) {
 }
 
 static int advance(Engine self) {
-    Context context = self->context;
-    printf("In call to advance()!\n");
+//    printf("In call to advance()!\n");
 
     // pick a tile to collapse
     unsigned int tID = coHeapPop(self->context);
 
-    printf(" Got random tID: %d\n", tID);
+//    printf(" Got random tID: %d\n", tID);
 
-    printf(" Tile blockmask is %p, freq %d\n", self->context->tiles[tID].validBlockMask, self->context->tiles[tID].freq);
+//    printf(" Tile blockmask is %p, freq %d\n", self->context->tiles[tID].validBlockMask, self->context->tiles[tID].freq);
 
-    coHeapPrint(self->context);
+//    coHeapPrint(self->context);
 
 
     // pick a block to collapse it to
     Block block = bsetRandom(self->bset, self->context->tiles[tID].validBlockMask, rand() % (self->context->tiles[tID].freq));
 
-    printf(" Got random blockPtr %p\n", block);
-    printf(" Collapsing tile (%d, %d) to block:\n", xTileID(tID), yTileID(tID));
-    blPrint(block);
+//    printf(" Got random blockPtr %p\n", block);
+//    printf(" Collapsing tile (%d, %d) to block:\n", xTileID(tID), yTileID(tID));
+//    blPrint(block);
 
     tiCollapseTo(self->context, tID, block);
-    printf(" Done tile collapse!\n");
+//    printf(" Done tile collapse!\n");
 
     if (rippleChangesFrom(self, tID)) {
-        printf(" Finished rippleChangesFrom() - now refreshing freq/entropy values!\n");
-        printf(" Got %d changed tiles: ", self->changedTileIDs[0]);
-        for (int k = 1; k <= self->changedTileIDs[0]; k++) {
-            printf("%d, ", self->changedTileIDs[k]);
-        }
-        printf("\n");
+//        printf(" Finished rippleChangesFrom() - now refreshing freq/entropy values!\n");
+//        printf(" Got %d changed tiles: ", self->changedTileIDs[0]);
+//        for (int k = 1; k <= self->changedTileIDs[0]; k++) {
+//            printf("%d, ", self->changedTileIDs[k]);
+//        }
+//        printf("\n");
 
-        printf("Performing initial heapPrint\n");
-        coHeapPrint(self->context);
+//        printf("Performing initial heapPrint\n");
+//        coHeapPrint(self->context);
 
         for (int k = 1; k <= self->changedTileIDs[0]; k++) {
-            printf("-- dealing with changed tile %d\n", self->changedTileIDs[k]);
+//            printf("-- dealing with changed tile %d\n", self->changedTileIDs[k]);
             self->context->tiles[self->changedTileIDs[k]].ctIndex = 0;
             tiHeapRefresh(self->context, self->bset, self->changedTileIDs[k]);
 //            coHeapPrint(self->context);
         }
 //        coHeapPrint(self->context);
-        printf("-- autochanged tile %d\n", tID);
+//        printf("-- autochanged tile %d\n", tID);
         tiRefreshValues(self->context, self->bset, tID);
         self->context->tiles[tID].ctIndex = 0;
 
         self->changedTileIDs[0] = 0;
         return 1;
     } else {
-        printf(" Ripple changes failed!\n");
+//        printf(" Ripple changes failed!\n");
         assert(0);
         return 0;
     }
@@ -192,49 +191,49 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
             assert(1==0);
     }
 
-    printf("      - In ChildTile (%d, %d) / p rmv:", xTileID(ctID), yTileID(ctID));
-    bmPrint(cDifference);
-    printf("\n");
+//    printf("      - In ChildTile (%d, %d) / p rmv:", xTileID(ctID), yTileID(ctID));
+//    bmPrint(cDifference);
+//    printf("\n");
 
     tile * cTile = &(context->tiles[ctID]);
     unsigned int diffBlockIDs[bsetLen(bset) + 1];
 
     cTile = &(context->tiles[ctID]);
-    printf("        - Adj sTile (%d, %d) with vbm:", xTileID(ctID), yTileID(ctID));
-    bmPrint(cTile->validBlockMask);
-    printf("\n");
+//    printf("        - Adj sTile (%d, %d) with vbm:", xTileID(ctID), yTileID(ctID));
+//    bmPrint(cTile->validBlockMask);
+//    printf("\n");
 
     bmAnd(cDifference, cTile->validBlockMask);
 
-    printf("      - After bmAnd, cDifference is:");
-    bmPrint(cDifference);
-    printf("\n");
+//    printf("      - After bmAnd, cDifference is:");
+//    bmPrint(cDifference);
+//    printf("\n");
 
     bmFastCherrypick(cDifference, diffBlockIDs);
     unsigned int index = diffBlockIDs[0];
 
-    printf ("      - Printing diffBlockIDs:");
-    while (index > 0) {
-        printf("%d,", diffBlockIDs[index]);
-        index--;
-    }
-    printf("\n");
+//    printf ("      - Printing diffBlockIDs:");
+//    while (index > 0) {
+//        printf("%d,", diffBlockIDs[index]);
+//        index--;
+//    }
+//    printf("\n");
     index = diffBlockIDs[0];
 
-    printf("          - *Actual* diff blockIDs:");
+//    printf("          - *Actual* diff blockIDs:");
     while (index > 0) {
 //        printf("          - Would add(?) block %d\n", diffBlockIDs[index]);
         Block curBlock = bsetLookup(bset, diffBlockIDs[index--]);
 
         if (! bmAndValue(curBlock->overlapMasks[dir], curTile->validBlockMask ) ) {
-            printf("%d,", diffBlockIDs[index+1]);
+//            printf("%d,", diffBlockIDs[index+1]);
             blbmAdd(curBlock, cDifference);
 //            printf("          - Actually adding block %d, leaves cDiff as:", diffBlockIDs[index+1]);
 //            bmPrint(cDifference);
 //            printf("\n");
         }
     }
-    printf("\n");
+//    printf("\n");
 
     if (bmTrue(cDifference)) {
         VisitNode nextToVisit = malloc(sizeof(struct visitNode));
@@ -249,29 +248,28 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
         bmAnd(cTile->validBlockMask, cDifference);
     }
 
-    printf("        - New tile (%d, %d) chngd vbm:", xTileID(ctID), yTileID(ctID));
-    bmPrint(cTile->validBlockMask);
-    printf("\n");
+//    printf("        - New tile (%d, %d) chngd vbm:", xTileID(ctID), yTileID(ctID));
+//    bmPrint(cTile->validBlockMask);
+//    printf("\n");
 
     return 1;
 }
 
 static void addChangedTile(Engine self, unsigned int ctID) {
-    Context context = self->context;
-    printf ("      Adding changed tile %d (%d, %d)\n", ctID, xTileID(ctID), yTileID(ctID));
+//    printf ("      Adding changed tile %d (%d, %d)\n", ctID, xTileID(ctID), yTileID(ctID));
     if (self->context->tiles[ctID].ctIndex == 0) {
 
         self->context->tiles[ctID].ctIndex = self->changedTileIDs[0];
         self->changedTileIDs[0]++;
         self->changedTileIDs[self->changedTileIDs[0]] = ctID;
-        printf ("      Tile %d now in heap at %d\n", ctID, self->context->tiles[ctID].ctIndex);
+//        printf ("      Tile %d now in heap at %d\n", ctID, self->context->tiles[ctID].ctIndex);
     } else {
-        printf ("      Tile %d was already in heap at %d - not adding\n", ctID, self->context->tiles[ctID].ctIndex);
+//        printf ("      Tile %d was already in heap at %d - not adding\n", ctID, self->context->tiles[ctID].ctIndex);
     }
 }
 
 static int rippleChangesFrom(Engine self, unsigned int tID) {
-    printf("   In call to rippleChangesFrom()!\n");
+//    printf("   In call to rippleChangesFrom()!\n");
 
     Context context = self->context;
     BlockSet bset = self->bset;
@@ -291,12 +289,12 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
 
         toVisit = toVisit->next;
 
-        printf("   - Visiting tile (%d, %d) with vbm:", xTileID(tID), yTileID(tID));
-        bmPrint(curTile->validBlockMask);
-        printf("  (falisty %d)\n", bmFalse(curTile->validBlockMask));
-        printf("   - Tile also has rippleDiff:");
-        bmPrint(curDifference);
-        printf("\n");
+//        printf("   - Visiting tile (%d, %d) with vbm:", xTileID(tID), yTileID(tID));
+//        bmPrint(curTile->validBlockMask);
+//        printf("  (falisty %d)\n", bmFalse(curTile->validBlockMask));
+//        printf("   - Tile also has rippleDiff:");
+//        bmPrint(curDifference);
+//        printf("\n");
         if (bmFalse(curTile->validBlockMask)) {
             return 0;
         } else {
@@ -313,12 +311,12 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
             bmFastCherrypick(curDifference, diffBlockIDs);
             unsigned int index = diffBlockIDs[0];
 
-            printf("    Blocks being removed are:");
-            while (index > 0) {
-                printf("%d,", diffBlockIDs[index] );
-                index--;
-            }
-            printf("\n");
+//            printf("    Blocks being removed are:");
+//            while (index > 0) {
+//                printf("%d,", diffBlockIDs[index] );
+//                index--;
+//            }
+//            printf("\n");
 
             index = diffBlockIDs[0];
 
@@ -331,10 +329,10 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
                 bmOr(eDifference, curBlock->overlapMasks[CARD_W]);
                 bmOr(wDifference, curBlock->overlapMasks[CARD_E]);
 
+                /*
                 printf("   - Block %d had enabled(n):", diffBlockIDs[index+1]);
                 bmPrint(curBlock->overlapMasks[CARD_N]);
                 printf("\n");
-                /*
                 printf("   - appending to sDifference:");
                 bmPrint(curBlock->overlapMasks[CARD_S]);
                 printf("\n");
@@ -348,10 +346,10 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
 
             }
 
+            /*
             printf("   - Created nDifference:");
             bmPrint(nDifference);
             printf("\n");
-            /*
             printf("   - Created sDifference:");
             bmPrint(sDifference);
             printf("\n");
@@ -374,6 +372,6 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
             bmDestroy(wDifference);
         }
     }
-    printf("   Leaving call to rippleChangesFrom()!\n");
+//    printf("   Leaving call to rippleChangesFrom()!\n");
     return 1;
 }

@@ -337,9 +337,9 @@ void bsetEntropy(BlockSet self, Bitmask bm, unsigned int * freq, float * entropy
     float innerSum = 0;
     *freq = 0;
 
-    printf ("Setting entropy of bitmask %p / value:", bm);
-    bmPrint(bm);
-    printf("\n");
+//    printf ("Setting entropy of bitmask %p / value:", bm);
+//    bmPrint(bm);
+//    printf("\n");
 
     for (int k = self->len - 1; k >= 0; k--) {
         Block block = bsetLookup(self, k);
@@ -360,7 +360,7 @@ void bsetEntropy(BlockSet self, Bitmask bm, unsigned int * freq, float * entropy
     }
     *entropy = log2(*freq) - (innerSum / *freq);
 
-    printf ("Set final freq %d / entropy %f\n", *freq, *entropy);
+//    printf ("Set final freq %d / entropy %f\n", *freq, *entropy);
 
 }
 

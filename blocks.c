@@ -6,7 +6,7 @@
 #include "bitmasks.h"
 #include "blocks.h"
 
-#define DPRINT_OVERLAPS  1
+#define DPRINT_OVERLAPS  0
 #define DPRINT_OVERLAP_CHECKS  0
 
 #define flat2(x,y) (x+y*2)
@@ -16,16 +16,74 @@
 
 #define unflatX(xy, size) (xy%size)
 #define unflatY(xy, size) (xy/size)
-#define unflatX2(xy) (xy%2)
-#define unflatY2(xy) (xy/2)
-#define unflatX3(xy) (xy%3)
-#define unflatY3(xy) (xy/3)
-#define unflatX4(xy) (xy%4)
-#define unflatY4(xy) (xy/4)
 
 #define OVERLAPS_LEN(size) (size * (size-1))
 
-const unsigned char nOverlaps4[24] = {};
+const unsigned char nOverlaps4[24] = {
+    flat4(0,0), flat4(0,1),
+    flat4(1,0), flat4(1,1),
+    flat4(2,0), flat4(2,1),
+    flat4(3,0), flat4(3,1),
+
+    flat4(0,1), flat4(0,2),
+    flat4(1,1), flat4(1,2),
+    flat4(2,1), flat4(2,2),
+    flat4(3,1), flat4(3,2),
+
+    flat4(0,2), flat4(0,3),
+    flat4(1,2), flat4(1,3),
+    flat4(2,2), flat4(2,3),
+    flat4(3,2), flat4(3,3),
+};
+const unsigned char sOverlaps4[24] = {
+    flat4(0,1), flat4(0,0),
+    flat4(1,1), flat4(1,0),
+    flat4(2,1), flat4(2,0),
+    flat4(3,1), flat4(3,0),
+
+    flat4(0,2), flat4(0,1),
+    flat4(1,2), flat4(1,1),
+    flat4(2,2), flat4(2,1),
+    flat4(3,2), flat4(3,1),
+
+    flat4(0,3), flat4(0,2),
+    flat4(1,3), flat4(1,2),
+    flat4(2,3), flat4(2,2),
+    flat4(3,3), flat4(3,2),
+};
+const unsigned char eOverlaps4[24] = {
+    flat4(0,0), flat4(1,0),
+    flat4(0,1), flat4(1,1),
+    flat4(0,2), flat4(1,2),
+    flat4(0,3), flat4(1,3),
+
+    flat4(1,0), flat4(2,0),
+    flat4(1,1), flat4(2,1),
+    flat4(1,2), flat4(2,2),
+    flat4(1,3), flat4(2,3),
+
+    flat4(2,0), flat4(3,0),
+    flat4(2,1), flat4(3,1),
+    flat4(2,2), flat4(3,2),
+    flat4(2,3), flat4(3,3),
+};
+const unsigned char wOverlaps4[24] = {
+    flat4(1,0), flat4(0,0),
+    flat4(1,1), flat4(0,1),
+    flat4(1,2), flat4(0,2),
+    flat4(1,3), flat4(0,3),
+
+    flat4(2,0), flat4(1,0),
+    flat4(2,1), flat4(1,1),
+    flat4(2,2), flat4(1,2),
+    flat4(2,3), flat4(1,3),
+
+    flat4(3,0), flat4(2,0),
+    flat4(3,1), flat4(2,1),
+    flat4(3,2), flat4(2,2),
+    flat4(3,3), flat4(2,3),
+};
+
 
 const unsigned char nOverlaps3[12] = {
     flat3(0,0), flat3(0,1),
@@ -53,7 +111,6 @@ const unsigned char eOverlaps3[12] = {
     flat3(1,0), flat3(2,0),
     flat3(1,1), flat3(2,1),
     flat3(1,2), flat3(2,2)
-
 };
 const unsigned char wOverlaps3[12] = {
     flat3(1,0), flat3(0,0),
@@ -177,7 +234,7 @@ void blMarkOverlaps(Block self, Block other, cardinal dir) {
         blPrint(other);
     #endif
 
-    const unsigned char * oPairs;
+    const unsigned char * oPairs = NULL;
     switch(dir){
         case CARD_N:
             switch(self->size) {
@@ -188,7 +245,7 @@ void blMarkOverlaps(Block self, Block other, cardinal dir) {
                     oPairs = nOverlaps3;
                     break;
                 case 4:
-                    assert(1==0);
+                    oPairs = nOverlaps4;
                     break;
                 default:
                     assert(1==0);
@@ -203,7 +260,7 @@ void blMarkOverlaps(Block self, Block other, cardinal dir) {
                     oPairs = wOverlaps3;
                     break;
                 case 4:
-                    assert(1==0);
+                    oPairs = wOverlaps4;
                     break;
                 default:
                     assert(1==0);
@@ -218,7 +275,7 @@ void blMarkOverlaps(Block self, Block other, cardinal dir) {
                     oPairs = eOverlaps3;
                     break;
                 case 4:
-                    assert(1==0);
+                    oPairs = eOverlaps4;
                     break;
                 default:
                     assert(1==0);
@@ -233,7 +290,7 @@ void blMarkOverlaps(Block self, Block other, cardinal dir) {
                     oPairs = sOverlaps3;
                     break;
                 case 4:
-                    assert(1==0);
+                    oPairs = sOverlaps4;
                     break;
                 default:
                     assert(1==0);

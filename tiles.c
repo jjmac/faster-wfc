@@ -46,7 +46,7 @@ void coPrint(Context self) {
 }
 
 static void heapSanityCheck(Context self){
-    printf("      Sanity-checking heap with %d elements\n", self->eHeap[0]);
+//    printf("      Sanity-checking heap with %d elements\n", self->eHeap[0]);
     for (int k = 1; k <= self->eHeap[0]; k++) {
         tile t = self->tiles[self->eHeap[k]];
         if (t.heapIndex != k) {
@@ -66,7 +66,7 @@ void coHeapPrint(Context self) {
 }
 
 void coHeapPush(Context self, unsigned int tID) {
-    printf("      Pushing tile %d onto heap with %d elements!\n", tID, self->eHeap[0]);
+//    printf("      Pushing tile %d onto heap with %d elements!\n", tID, self->eHeap[0]);
     unsigned int * eHeap = self->eHeap;
     tile * tiles = self->tiles;
 
@@ -105,8 +105,8 @@ unsigned int coHeapPop(Context self) {
 
 void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
     if (self->tiles[tID].entropy == 0) {
-        printf("!!!!! Tried to remove tile %d from heap:\n", tID);
-        coHeapPrint(self);
+//        coHeapPrint(self);
+        printf("!!!!! Tried to remove tile %d from heap\n", tID);
         assert (1 == 0);
     }
     coHeapRemove(self, tID);
@@ -118,7 +118,7 @@ void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
 }
 
 void coHeapRemove(Context self, unsigned int tID) {
-    printf("      Removing tile %d from heap with %d elements!\n", tID, self->eHeap[0]);
+//    printf("      Removing tile %d from heap with %d elements!\n", tID, self->eHeap[0]);
     innerHeapRemove(self, self->tiles[tID].heapIndex);
 
     heapSanityCheck(self);

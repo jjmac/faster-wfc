@@ -10,11 +10,14 @@
 BlockSet bsDefault1();
 BlockSet bsDefault2();
 BlockSet bsDefault3();
-
+BlockSet redMaze();
+BlockSet flowers(int size);
+BlockSet corid(int size);
 
 int main(int argc, char** argv) {
 
-    BlockSet bset = bsDefault3();
+    BlockSet bset = flowers(3);
+//    BlockSet bset = bsDefault3();
 
 //    BlockSet bset = bsetCreate( 3 );
 
@@ -36,10 +39,10 @@ int main(int argc, char** argv) {
 
     bsetLock(bset);
 
-    bsetPrint(bset);
+//    bsetPrint(bset);
 
-    Context con = coCreate( 7, 7 );
-    Engine en = enCreate(bset, con, 2);
+    Context con = coCreate( 10, 10 );
+    Engine en = enCreate(bset, con, 0);
 
 //    enPrepare(en);
     enRun(en);
@@ -53,10 +56,10 @@ BlockSet bsDefault1() {
     "##";
 
     Grid grid = grCreateFromString(preset, 2, 2);
-    grPrint(grid);
+//    grPrint(grid);
 
     BlockSet bset = bsetCreateFromGrid(grid, 2, 0,0);
-    bsetPrint(bset);
+//    bsetPrint(bset);
     return bset;
 }
 
@@ -67,24 +70,95 @@ BlockSet bsDefault2() {
     "xxx";
 
     Grid grid = grCreateFromString(preset, 3, 3);
-    grPrint(grid);
+//    grPrint(grid);
 
     BlockSet bset = bsetCreateFromGrid(grid, 3, 0,0);
-    bsetPrint(bset);
+//    bsetPrint(bset);
     return bset;
 }
 
 BlockSet bsDefault3() {
     char * preset = "" \
-    "...." \
-    "##.." \
-    "..#." \
-    "..#.";
+    "bbbb" \
+    "bbbb" \
+    "aaaa" \
+    "aaaa";
 
     Grid grid = grCreateFromString(preset, 4, 4);
-    grPrint(grid);
+//    grPrint(grid);
 
-    BlockSet bset = bsetCreateFromGrid(grid, 3, 1,1);
-    bsetPrint(bset);
+    BlockSet bset = bsetCreateFromGrid(grid, 4, 0,0);
+//    bsetPrint(bset);
+    return bset;
+}
+
+BlockSet redMaze() {
+    char * preset = "" \
+    "...." \
+    ".###" \
+    ".#0#" \
+    ".###";
+
+    Grid grid = grCreateFromString(preset, 4, 4);
+    BlockSet bset = bsetCreateFromGrid(grid, 2, 1,1);
+    return bset;
+}
+
+
+BlockSet corid(int size) {
+    char * preset = "" \
+    "#...#....#c#.rrrr." \
+    "##########c#.rrrr." \
+    "#cccccccc#c#.rrrr." \
+    "##########c#.rrrr." \
+    "#....#...#c#......" \
+    "#.rr.#.r.#c#######" \
+    "#.rr.#...#c#......" \
+    "#.rr.#######.rrrr." \
+    "#.rr.#.....#......" \
+    "#.rr.#.rrr.#######" \
+    "#....#.....#......" \
+    "############.rrrr." \
+    "#...#....#c#.rrrr." \
+    "#.r.#.rr.#c#.rrrr." \
+    "#.r.#.rr.#c#.rrrr." \
+    "#.r.#.rr.#c#.rrrr.";
+
+    Grid grid = grCreateFromString(preset, 18, 16);
+    BlockSet bset = bsetCreateFromGrid(grid, size, 1,1);
+    return bset;
+}
+
+BlockSet flowers(int size) {
+    char * preset = "" \
+    "..............." \
+    ".....o.......o." \
+    "....o+o.....o+o" \
+    ".....o.......o." \
+    ".....+.......+." \
+    ".....++.....++." \
+    ".o....++...++.." \
+    "o+o....+...+..." \
+    ".o....++...++.." \
+    ".+....+..o..++." \
+    ".++..++.o+o..+." \
+    "..+.++...o...+." \
+    "..+++....+..++." \
+    "...+.....+.++.." \
+    "...++....+++..." \
+    "....++....+...." \
+    ".....++..++...." \
+    "......+.++....." \
+    "......+++......" \
+    ".......+......." \
+    ".......+......." \
+    "ggggggg+ggggggg" \
+    "ggggggggggggggg";
+
+    Grid grid = grCreateFromString(preset, 15, 23);
+//    grPrint(grid);
+
+    BlockSet bset = bsetCreateFromGrid(grid, size, 1,1);
+//    bsetPrint(bset);
     return bset;
 }
