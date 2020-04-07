@@ -19,6 +19,8 @@ BlockSet corid(int size);
 extern float bCoreLoopTime;
 extern float bRippleTime;
 extern float bHeapPushTime;
+extern float bHeapRemoveTime;
+extern float bHeapRefreshValuesTime;
 extern float bHeapRefreshTime;
 extern int bHeapRefreshCalls;
 extern float bSiftDownTime;
@@ -28,8 +30,10 @@ void benchprint(){
     printf("Core loop time: %f\n", bCoreLoopTime/CLOCKS_PER_SEC);
     printf("RippleChanges() time: %f\n", bRippleTime/CLOCKS_PER_SEC);
     printf("Heap push time: %f\n", bHeapPushTime/CLOCKS_PER_SEC);
+    printf("Heap refresh values time: %f\n", bHeapRefreshValuesTime/CLOCKS_PER_SEC);
     printf("Heap refresh time: %f\n", bHeapRefreshTime/CLOCKS_PER_SEC);
     printf("Heap refresh calls: %d\n", bHeapRefreshCalls);
+    printf("Heap remove time: %f\n", bHeapRemoveTime/CLOCKS_PER_SEC);
     printf("Heap sift time: %f\n", bSiftDownTime/CLOCKS_PER_SEC);
     printf("Entropy time: %f\n", bEntropyTime/CLOCKS_PER_SEC);
 }
@@ -63,7 +67,7 @@ int main(int argc, char** argv) {
     bsetPrint(bset);
 
     Context con = coCreate( 100, 100 );
-    Engine en = enCreate(bset, con, 10);
+    Engine en = enCreate(bset, con, 100);
 
 //    enPrepare(en);
     enRun(en);

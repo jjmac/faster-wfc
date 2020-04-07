@@ -5,6 +5,7 @@ struct block {
     unsigned char size;
 
     unsigned int freq;
+    float logFreq;
 
     unsigned char fieldIndex;
     unsigned char bitIndex;
