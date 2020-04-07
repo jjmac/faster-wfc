@@ -112,6 +112,7 @@ unsigned int coHeapPop(Context self) {
 
     heapSanityCheck(self);
 
+    self->tiles[retVal].heapIndex = 0;
     return retVal;
 }
 

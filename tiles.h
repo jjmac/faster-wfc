@@ -18,6 +18,7 @@ struct context {
     unsigned short ySize;
     tile * tiles;
     unsigned int * eHeap;
+    unsigned int lastCollapsedTile;
 };
 
 Context coCreate(unsigned short xSize, unsigned short ySize);

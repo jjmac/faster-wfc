@@ -56,17 +56,19 @@ void enPrepare(Engine self) {
 
     printf("= In prepare!\n");
 
-    for (unsigned int tID = context->xSize*context->ySize - 1; tID != -1; tID--) {
+    context->lastCollapsedTile = context->xSize*context->ySize-1;
+    for (unsigned int tID = context->lastCollapsedTile; tID != -1; tID--) {
         context->tiles[tID].validBlockMask = bsetTrueMask(bset);
         context->tiles[tID].rippleDifference = bsetFalseMask(bset);
         context->tiles[tID].ctIndex = 0;
+        context->tiles[tID].heapIndex = 0;
         tiRefreshValues(context, bset, tID);
 
 //        printf("Tile %d has freq %d ent %f mask:", tID, context->tiles[tID].freq, context->tiles[tID].entropy);
 //        bmPrint(context->tiles[tID].validBlockMask);
 //        printf("\n");
 
-        coHeapPush(context, tID);
+//        coHeapPush(context, tID);
     }
 
     self->changedTileIDs = malloc(sizeof(unsigned int) * (context->xSize * context->ySize + 1));
@@ -78,8 +80,8 @@ void enCoreLoop(Engine self) {
 #if DEBUG_BENCH
     float startTime = clock();
 #endif
-    while (self->context->eHeap[0]) {
-        printf("= In core loop - advancing (%d tiles remain)!\n", self->context->eHeap[0]);
+    while (self->context->lastCollapsedTile != -1) {
+        printf("= In core loop - advancing (%d tiles remain, %d in heap)!\n", self->context->lastCollapsedTile, self->context->eHeap[0]);
 //        coHeapPrint(self->context);
         advance(self);
     }
@@ -102,12 +104,24 @@ void enCleanup(Engine self) {
 }
 
 static int advance(Engine self) {
-//    printf("In call to advance()!\n");
+    printf("In call to advance()!\n");
+    Context context = self->context;
+    unsigned int tID;
 
     // pick a tile to collapse
-    unsigned int tID = coHeapPop(self->context);
+    if (self->context->eHeap[0] > 0) {
+        tID = coHeapPop(self->context);
+    } else {
+        while (context->lastCollapsedTile != -1) {
+            if (context->tiles[context->lastCollapsedTile].heapIndex == 0 && context->tiles[context->lastCollapsedTile].entropy > 0) {
+                tID = context->lastCollapsedTile;
+                break;
+            }
+            context->lastCollapsedTile--;
+        }
+    }
 
-//    printf(" Got random tID: %d\n", tID);
+    printf(" Got random tID: %d\n", tID);
 
 //    printf(" Tile blockmask is %p, freq %d\n", self->context->tiles[tID].validBlockMask, self->context->tiles[tID].freq);
 
@@ -132,19 +146,29 @@ static int advance(Engine self) {
 //        }
 //        printf("\n");
 
-//        printf("Performing initial heapPrint\n");
-//        coHeapPrint(self->context);
-
         for (int k = 1; k <= self->changedTileIDs[0]; k++) {
 //            printf("-- dealing with changed tile %d\n", self->changedTileIDs[k]);
-            self->context->tiles[self->changedTileIDs[k]].ctIndex = 0;
-            tiHeapRefresh(self->context, self->bset, self->changedTileIDs[k]);
 //            coHeapPrint(self->context);
+
+            self->context->tiles[self->changedTileIDs[k]].ctIndex = 0;
+            if (self->context->tiles[self->changedTileIDs[k]].heapIndex != 0) {
+//                printf("  -- tiHeapRefresh\n");
+                tiHeapRefresh(self->context, self->bset, self->changedTileIDs[k]);
+            } else {
+//                printf("  -- tiRefreshValues\n");
+                tiRefreshValues(self->context, self->bset, self->changedTileIDs[k]);
+                if (self->context->tiles[self->changedTileIDs[k]].entropy > 0) {
+//                    printf("  -- coHeapPush\n");
+                    coHeapPush(self->context, self->changedTileIDs[k]);
+                }
+            }
+//            coHeapPrint(self->context);
+//            printf("-- done dealing with tile %d\n", k);
         }
 //        coHeapPrint(self->context);
-//        printf("-- autochanged tile %d\n", tID);
-        tiRefreshValues(self->context, self->bset, tID);
-        self->context->tiles[tID].ctIndex = 0;
+
+//        tiRefreshValues(self->context, self->bset, tID);
+//        self->context->tiles[tID].ctIndex = 0;
 
         self->changedTileIDs[0] = 0;
         return 1;
@@ -283,7 +307,7 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
 #if DEBUG_BENCH
     float startTime = clock();
 #endif
-//    printf("   In call to rippleChangesFrom()!\n");
+    printf("   In call to rippleChangesFrom()!\n");
 
     Context context = self->context;
     BlockSet bset = self->bset;
@@ -291,6 +315,8 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
 
     tile * curTile = NULL;
     Bitmask curDifference = NULL;
+
+    addChangedTile(self, tID);
 
     VisitNode toVisit = malloc(sizeof(struct visitNode));
     toVisit->tID = tID;
