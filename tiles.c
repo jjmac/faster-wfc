@@ -11,7 +11,6 @@
 
 #include "benchmarking.h"
 
-#define DEBUG_OLD_HEAP_REFRESH 0
 #define CHECK_HEAPS 0
 
 float bHeapPushTime = 0;
@@ -127,29 +126,21 @@ void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
 #if DEBUG_BENCH
     float startTime = clock();
 #endif
-    if (self->tiles[tID].entropy == 0) {
+    if (self->tiles[tID].entropy <= 0) {
 //        coHeapPrint(self);
         printf("!!!!! Tried to remove tile %d from heap\n", tID);
         assert (1 == 0);
     }
 
-#if DEBUG_OLD_HEAP_REFRESH
-    coHeapRemove(self, tID);
-//    coHeapPrint(self);
-    tiRefreshValues(self, bset, tID);
-    if (self->tiles[tID].entropy > 0) {
-        coHeapPush(self, tID);
-    } else {
-        self->tiles[tID].heapIndex = 0;
-    }
-#else
-//    float oldEntropy = self->tiles[tID].entropy;
     tiRefreshValues(self, bset, tID);
 
-    if (self->tiles[tID].entropy == 0) {
+//    printf("      Refreshing tile %d - after refresh, entropy is %f!\n", tID, self->tiles[tID].entropy);
+    if (self->tiles[tID].entropy <= 0) {
+//        printf("      Consequently removing tile %d from heap!\n", tID);
         coHeapRemove(self, tID);
         self->tiles[tID].heapIndex = 0;
     } else {
+//        printf("      Consequently sifting tile %d around in heap!\n", tID);
         heapSiftDown(self, self->tiles[tID].heapIndex);
     }
 #endif

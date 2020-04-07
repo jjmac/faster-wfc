@@ -81,7 +81,7 @@ void enCoreLoop(Engine self) {
     float startTime = clock();
 #endif
     while (self->context->lastCollapsedTile != -1) {
-        printf("= In core loop - advancing (%d tiles remain, %d in heap)!\n", self->context->lastCollapsedTile, self->context->eHeap[0]);
+//        printf("= In core loop - advancing (%d tiles remain, %d in heap)!\n", self->context->lastCollapsedTile, self->context->eHeap[0]);
 //        coHeapPrint(self->context);
         advance(self);
     }
@@ -104,7 +104,7 @@ void enCleanup(Engine self) {
 }
 
 static int advance(Engine self) {
-    printf("In call to advance()!\n");
+//    printf("In call to advance()!\n");
     Context context = self->context;
     unsigned int tID = 0;
 
@@ -121,7 +121,7 @@ static int advance(Engine self) {
         }
     }
 
-    printf(" Got random tID: %d\n", tID);
+//    printf(" Got random tID: %d\n", tID);
 
 //    printf(" Tile blockmask is %p, freq %d\n", self->context->tiles[tID].validBlockMask, self->context->tiles[tID].freq);
 
@@ -148,7 +148,7 @@ static int advance(Engine self) {
 */
 
         for (int k = 1; k <= self->changedTileIDs[0]; k++) {
-//            printf("-- dealing with changed tile %d\n", self->changedTileIDs[k]);
+//            printf("-- dealing with changed tile %d w entropy %e\n", self->changedTileIDs[k], self->context->tiles[self->changedTileIDs[k]].entropy);
 //            coHeapPrint(self->context);
 
             self->context->tiles[self->changedTileIDs[k]].ctIndex = 0;
@@ -159,7 +159,7 @@ static int advance(Engine self) {
 //                printf("  -- tiRefreshValues\n");
                 tiRefreshValues(self->context, self->bset, self->changedTileIDs[k]);
                 if (self->context->tiles[self->changedTileIDs[k]].entropy > 0) {
-//                    printf("  -- coHeapPush\n");
+//                    printf("  -- coHeapPush %e vs\n", self->context->tiles[self->changedTileIDs[k]].entropy);
                     coHeapPush(self->context, self->changedTileIDs[k]);
                 }
             }

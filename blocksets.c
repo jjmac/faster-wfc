@@ -249,7 +249,7 @@ void bsetLock(BlockSet self) {
     while (self->blockList != NULL) {
         curBlock = self->blockList->value;
 
-        curBlock->freq = 1; // CHANGE
+//        curBlock->freq = 1; // CHANGE
 
         curBlock->fieldIndex = absIndex / FIELD_LEN;
         curBlock->bitIndex = absIndex % FIELD_LEN;
@@ -342,6 +342,7 @@ void bsetEntropy(BlockSet self, Bitmask bm, unsigned int * freq, float * entropy
     float startTime = clock();
 #endif
 
+    int distinctBlocks = 0;
     float innerSum = 0;
     *freq = 0;
 
@@ -356,6 +357,7 @@ void bsetEntropy(BlockSet self, Bitmask bm, unsigned int * freq, float * entropy
 //        printf("\n");
 
         if (blbmContains(block, bm)) {
+            distinctBlocks++;
             *freq += block->freq;
             innerSum += block->freq * log2(block->freq);
 //            printf ("    blockFreq %d, total %d || bitIndex %u / fieldIndex %u || fieldMask:", *freq, block->freq, block->bitIndex, block->fieldIndex);
@@ -366,7 +368,11 @@ void bsetEntropy(BlockSet self, Bitmask bm, unsigned int * freq, float * entropy
 //            printf("\n");
         }
     }
-    *entropy = log2(*freq) - (innerSum / *freq);
+    if (distinctBlocks == 1) {
+        *entropy = 0;
+    } else {
+        *entropy = log2(*freq) - (innerSum / *freq);
+    }
 
 //    printf ("Set final freq %d / entropy %f\n", *freq, *entropy);
 #if DEBUG_BENCH

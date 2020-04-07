@@ -38,7 +38,7 @@ void benchprint(){
 int main(int argc, char** argv) {
 
     BlockSet bset = flowers(3);
-//    BlockSet bset = bsDefault3();
+//    BlockSet bset = redMaze();
 
 //    BlockSet bset = bsetCreate( 3 );
 
@@ -60,10 +60,10 @@ int main(int argc, char** argv) {
 
     bsetLock(bset);
 
-//    bsetPrint(bset);
+    bsetPrint(bset);
 
-    Context con = coCreate( 200, 200 );
-    Engine en = enCreate(bset, con, 1);
+    Context con = coCreate( 100, 100 );
+    Engine en = enCreate(bset, con, 10);
 
 //    enPrepare(en);
     enRun(en);
@@ -76,7 +76,7 @@ int main(int argc, char** argv) {
 
 BlockSet bsDefault1() {
     char * preset = "" \
-    ".a" \
+    ".." \
     "##";
 
     Grid grid = grCreateFromString(preset, 2, 2);
