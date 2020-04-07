@@ -113,7 +113,6 @@ static int advance(Engine self) {
         }
         printf("\n");
 
-
         coHeapPrint(self->context);
 
         for (int k = 1; k <= changedTiles[0]; k++) {

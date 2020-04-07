@@ -46,10 +46,10 @@ void coPrint(Context self) {
 }
 
 void coHeapPrint(Context self) {
-    printf("Printing context heap with %d elements!\n", self->eHeap[0]);
+    printf("      Printing context heap with %d elements!\n", self->eHeap[0]);
     for (int k = 1; k <= self->eHeap[0]; k++) {
         tile t = self->tiles[self->eHeap[k]];
-        printf("  - H %d / %d | tile %d (%d, %d) | entropy %f\n", k, t.heapIndex, self->eHeap[k], self->eHeap[k] % self->xSize, self->eHeap[k] / self->xSize, t.entropy );
+        printf("      - H %d / %d | tile %d (%d, %d) | entropy %f\n", k, t.heapIndex, self->eHeap[k], self->eHeap[k] % self->xSize, self->eHeap[k] / self->xSize, t.entropy );
     }
 
 }
@@ -84,6 +84,11 @@ unsigned int coHeapPop(Context self) {
 }
 
 void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
+    if (self->tiles[tID].entropy == 0) {
+        printf("!!!!! Tried to remove tile %d from heap:\n", tID);
+        coHeapPrint(self);
+        assert (1 == 0);
+    }
     coHeapRemove(self, tID);
     tiRefreshValues(self, bset, tID);
     if (self->tiles[tID].entropy > 0) {
@@ -103,8 +108,8 @@ static void innerHeapRemove(Context self, unsigned int curIndex) {
         unsigned int lIndex = curIndex*2;
         unsigned int rIndex = lIndex+1;
 
-        printf ("DURING HEAPPOP - curIndex %d (lIndex %d, rIndex %d)\n", curIndex, lIndex, rIndex);
-        coHeapPrint(self);
+//        printf ("DURING HEAPPOP - curIndex %d (lIndex %d, rIndex %d)\n", curIndex, lIndex, rIndex);
+//        coHeapPrint(self);
 
         if (lIndex == eHeap[0]) {
             eHeap[curIndex] = eHeap[lIndex];
@@ -116,6 +121,7 @@ static void innerHeapRemove(Context self, unsigned int curIndex) {
             if (endIndex != curIndex) {
                 if (tiles[eHeap[endIndex]].entropy > tiles[eHeap[curIndex]].entropy) {
                     eHeap[curIndex / 2] = eHeap[endIndex];
+                    self->tiles[eHeap[curIndex]].heapIndex = curIndex;
                     self->tiles[eHeap[endIndex]].heapIndex = curIndex/2;
                 } else {
                     eHeap[curIndex] = eHeap[endIndex];
@@ -134,8 +140,8 @@ static void innerHeapRemove(Context self, unsigned int curIndex) {
             curIndex = rIndex;
         }
     }
-    printf ("just finished heappop, about to lose last element\n");
-    coHeapPrint(self);
+//    printf ("just finished heappop, about to lose last element\n");
+//    coHeapPrint(self);
     eHeap[0]--;
 }
 

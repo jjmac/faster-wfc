@@ -2,11 +2,10 @@ typedef struct tile tile;
 struct tile {
     unsigned char value;
 
-    unsigned int tID;
-    unsigned int heapIndex;
-
     unsigned int freq;
     float entropy;
+
+    unsigned int heapIndex;
 
     Bitmask validBlockMask;
     Bitmask rippleDifference;

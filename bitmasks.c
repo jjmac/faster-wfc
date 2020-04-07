@@ -104,11 +104,27 @@ int bmAndValue(Bitmask self, Bitmask other) {
     }
     return 0;
 }
+int bmXorValue(Bitmask self, Bitmask other) {
+    assert(self->len == other->len);
+    for(int k = self->len - 1; k >= 0; k--) {
+        if (self->fields[k] ^ other->fields[k]) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 Bitmask nbmCopy(Bitmask self){
     Bitmask new = bmCreate(self->len);
     for(int k = self->len-1; k >= 0; k--) {
         new->fields[k] = self->fields[k];
+    }
+    return new;
+}
+Bitmask nbmNot(Bitmask self){
+    Bitmask new = bmCreate(self->len);
+    for(int k = self->len-1; k >= 0; k--) {
+        new->fields[k] = ~self->fields[k];
     }
     return new;
 }

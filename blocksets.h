@@ -17,3 +17,7 @@ char bsetBlockToValue(BlockSet self, Bitmask bm);
 
 Bitmask bsetTrueMask(BlockSet self);
 Bitmask bsetFalseMask(BlockSet self);
+
+Bitmask bsetbmCreate(BlockSet self);
+
+int bsetTestSymmetry(BlockSet self);

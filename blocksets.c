@@ -380,5 +380,36 @@ Bitmask bsetTrueMask(BlockSet self){
     return nbmCopy(self->allTrueMask);
 }
 Bitmask bsetFalseMask(BlockSet self){
-    return bmCreate( ((self->len-1) / FIELD_LEN) + 1 );
+    return nbmNot(self->allTrueMask);
+}
+
+int bsetTestSymmetry(BlockSet self) {
+    for (int k = 0; k < self->len; k++) {
+        Block cur = bsetLookup(self, k);
+        for (int j = 0; j <= k; j++) {
+            Block other = bsetLookup(self, j);
+
+            printf ("Checking symmetry of block %d and block %d\n", k, j);
+            if (blbmContains(cur, other->overlapMasks[CARD_N]) != blbmContains(other, cur->overlapMasks[CARD_S]) ) {
+                printf ("Symmetry error!\n");
+                return 0;
+            }
+
+            if (blbmContains(cur, other->overlapMasks[CARD_S]) != blbmContains(other, cur->overlapMasks[CARD_N]) ) {
+                printf ("Symmetry error!\n");
+                return 0;
+            }
+
+            if (blbmContains(cur, other->overlapMasks[CARD_E]) != blbmContains(other, cur->overlapMasks[CARD_W]) ) {
+                printf ("Symmetry error!\n");
+                return 0;
+
+            }
+            if (blbmContains(cur, other->overlapMasks[CARD_W]) != blbmContains(other, cur->overlapMasks[CARD_E]) ) {
+                printf ("Symmetry error!\n");
+                return 0;
+            }
+        }
+    }
+    return 1;
 }
