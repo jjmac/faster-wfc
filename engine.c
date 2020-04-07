@@ -10,8 +10,13 @@
 #include "tiles.h"
 #include "engine.h"
 
+#include "benchmarking.h"
+
 #define xTileID(tID) (tID % context->xSize)
 #define yTileID(tID) (tID / context->xSize)
+
+float bCoreLoopTime = 0;
+float bRippleTime = 0;
 
 struct engine {
     BlockSet bset;
@@ -70,11 +75,17 @@ void enPrepare(Engine self) {
 }
 
 void enCoreLoop(Engine self) {
+#if DEBUG_BENCH
+    float startTime = clock();
+#endif
     while (self->context->eHeap[0]) {
         printf("= In core loop - advancing (%d tiles remain)!\n", self->context->eHeap[0]);
 //        coHeapPrint(self->context);
         advance(self);
     }
+#if DEBUG_BENCH
+    bCoreLoopTime += clock() - startTime;
+#endif
 }
 
 void enCleanup(Engine self) {
@@ -269,6 +280,9 @@ static void addChangedTile(Engine self, unsigned int ctID) {
 }
 
 static int rippleChangesFrom(Engine self, unsigned int tID) {
+#if DEBUG_BENCH
+    float startTime = clock();
+#endif
 //    printf("   In call to rippleChangesFrom()!\n");
 
     Context context = self->context;
@@ -373,5 +387,8 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
         }
     }
 //    printf("   Leaving call to rippleChangesFrom()!\n");
+#if DEBUG_BENCH
+    bRippleTime += clock() - startTime;
+#endif
     return 1;
 }

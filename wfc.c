@@ -7,12 +7,31 @@
 #include "engine.h"
 #include <stdio.h>
 
+#include "benchmarking.h"
+
 BlockSet bsDefault1();
 BlockSet bsDefault2();
 BlockSet bsDefault3();
 BlockSet redMaze();
 BlockSet flowers(int size);
 BlockSet corid(int size);
+
+extern float bCoreLoopTime;
+extern float bRippleTime;
+extern float bHeapPushTime;
+extern float bHeapRefreshTime;
+extern float bSiftDownTime;
+extern float bEntropyTime;
+
+void benchprint(){
+    printf("Core loop time: %f\n", bCoreLoopTime/CLOCKS_PER_SEC);
+    printf("RippleChanges() time: %f\n", bRippleTime/CLOCKS_PER_SEC);
+    printf("Heap push time: %f\n", bHeapPushTime/CLOCKS_PER_SEC);
+    printf("Heap refresh time: %f\n", bHeapRefreshTime/CLOCKS_PER_SEC);
+    printf("Heap sift time: %f\n", bSiftDownTime/CLOCKS_PER_SEC);
+    printf("Entropy time: %f\n", bEntropyTime/CLOCKS_PER_SEC);
+}
+
 
 int main(int argc, char** argv) {
 
@@ -41,12 +60,15 @@ int main(int argc, char** argv) {
 
 //    bsetPrint(bset);
 
-    Context con = coCreate( 10, 10 );
+    Context con = coCreate( 100, 100 );
     Engine en = enCreate(bset, con, 0);
 
 //    enPrepare(en);
     enRun(en);
 
+#if DEBUG_BENCH
+    benchprint();
+#endif
     return 0;
 }
 

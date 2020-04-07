@@ -9,6 +9,12 @@
 #include "blocksets.h"
 #include "tiles.h"
 
+#include "benchmarking.h"
+
+float bHeapPushTime = 0;
+float bHeapRefreshTime = 0;
+float bSiftDownTime = 0;
+
 static void innerHeapRemove(Context self, unsigned int curIndex);
 
 Context coCreate(unsigned short xSize, unsigned short ySize) {
@@ -66,6 +72,9 @@ void coHeapPrint(Context self) {
 }
 
 void coHeapPush(Context self, unsigned int tID) {
+#if DEBUG_BENCH
+    float startTime = clock();
+#endif
 //    printf("      Pushing tile %d onto heap with %d elements!\n", tID, self->eHeap[0]);
     unsigned int * eHeap = self->eHeap;
     tile * tiles = self->tiles;
@@ -92,6 +101,9 @@ void coHeapPush(Context self, unsigned int tID) {
     self->tiles[tID].heapIndex = curIndex;
 
     heapSanityCheck(self);
+#if DEBUG_BENCH
+    bHeapPushTime += clock() - startTime;
+#endif
 }
 
 unsigned int coHeapPop(Context self) {
@@ -104,6 +116,9 @@ unsigned int coHeapPop(Context self) {
 }
 
 void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
+#if DEBUG_BENCH
+    float startTime = clock();
+#endif
     if (self->tiles[tID].entropy == 0) {
 //        coHeapPrint(self);
         printf("!!!!! Tried to remove tile %d from heap\n", tID);
@@ -115,6 +130,9 @@ void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
     if (self->tiles[tID].entropy > 0) {
         coHeapPush(self, tID);
     }
+#if DEBUG_BENCH
+    bHeapRefreshTime += clock() - startTime;
+#endif
 }
 
 void coHeapRemove(Context self, unsigned int tID) {
@@ -125,6 +143,9 @@ void coHeapRemove(Context self, unsigned int tID) {
 }
 
 static void heapSiftDown(Context self, unsigned int curIndex) {
+#if DEBUG_BENCH
+    float startTime = clock();
+#endif
     unsigned int * eHeap = self->eHeap;
     tile * tiles = self->tiles;
 
@@ -159,6 +180,10 @@ static void heapSiftDown(Context self, unsigned int curIndex) {
     }
     tiles[tID].heapIndex = curIndex;
     eHeap[curIndex] = tID;
+
+#if DEBUG_BENCH
+    bSiftDownTime += clock() - startTime;
+#endif
 }
 
 static void innerHeapRemove(Context self, unsigned int curIndex) {

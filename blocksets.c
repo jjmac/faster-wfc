@@ -10,7 +10,11 @@
 #include "blocks.h"
 #include "blocksets.h"
 
+#include "benchmarking.h"
+
 #define DPRINT_LOCKED_DATA 1
+
+float bEntropyTime = 0;
 
 typedef struct blockListNode * BlockListNode;
 struct blockListNode {
@@ -334,6 +338,10 @@ Block bsetRandom(BlockSet self, Bitmask mask, int roll){
     return NULL;
 }
 void bsetEntropy(BlockSet self, Bitmask bm, unsigned int * freq, float * entropy) {
+#if DEBUG_BENCH
+    float startTime = clock();
+#endif
+
     float innerSum = 0;
     *freq = 0;
 
@@ -361,7 +369,9 @@ void bsetEntropy(BlockSet self, Bitmask bm, unsigned int * freq, float * entropy
     *entropy = log2(*freq) - (innerSum / *freq);
 
 //    printf ("Set final freq %d / entropy %f\n", *freq, *entropy);
-
+#if DEBUG_BENCH
+    bEntropyTime += clock() - startTime;
+#endif
 }
 
 char bsetBlockToValue(BlockSet self, Bitmask bm){
