@@ -45,16 +45,28 @@ void coPrint(Context self) {
     }
 }
 
+static void heapSanityCheck(Context self){
+    printf("      Sanity-checking heap with %d elements\n", self->eHeap[0]);
+    for (int k = 1; k <= self->eHeap[0]; k++) {
+        tile t = self->tiles[self->eHeap[k]];
+        if (t.heapIndex != k) {
+            coHeapPrint(self);
+            printf("      Sanity-check failed on element index %d\n", k);
+            assert(0);
+        }
+    }
+}
+
 void coHeapPrint(Context self) {
     printf("      Printing context heap with %d elements!\n", self->eHeap[0]);
     for (int k = 1; k <= self->eHeap[0]; k++) {
         tile t = self->tiles[self->eHeap[k]];
         printf("      - H %d / %d | tile %d (%d, %d) | entropy %f\n", k, t.heapIndex, self->eHeap[k], self->eHeap[k] % self->xSize, self->eHeap[k] / self->xSize, t.entropy );
     }
-
 }
 
 void coHeapPush(Context self, unsigned int tID) {
+    printf("      Pushing tile %d onto heap with %d elements!\n", tID, self->eHeap[0]);
     unsigned int * eHeap = self->eHeap;
     tile * tiles = self->tiles;
 
@@ -64,6 +76,9 @@ void coHeapPush(Context self, unsigned int tID) {
     float entropy = self->tiles[tID].entropy;
 
     while(nextIndex > 0) {
+
+//        printf("        -- In push, tile %d has entropy %f and is inserting at %d\n", tID, entropy, curIndex);
+
         if (tiles[eHeap[nextIndex]].entropy > entropy) {
             tiles[eHeap[nextIndex]].heapIndex = curIndex;
             eHeap[curIndex] = eHeap[nextIndex];
@@ -75,11 +90,16 @@ void coHeapPush(Context self, unsigned int tID) {
     }
     eHeap[curIndex] = tID;
     self->tiles[tID].heapIndex = curIndex;
+
+    heapSanityCheck(self);
 }
 
 unsigned int coHeapPop(Context self) {
     unsigned int retVal = self->eHeap[1];
     innerHeapRemove(self, 1);
+
+    heapSanityCheck(self);
+
     return retVal;
 }
 
@@ -90,6 +110,7 @@ void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
         assert (1 == 0);
     }
     coHeapRemove(self, tID);
+//    coHeapPrint(self);
     tiRefreshValues(self, bset, tID);
     if (self->tiles[tID].entropy > 0) {
         coHeapPush(self, tID);
@@ -97,52 +118,58 @@ void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
 }
 
 void coHeapRemove(Context self, unsigned int tID) {
+    printf("      Removing tile %d from heap with %d elements!\n", tID, self->eHeap[0]);
     innerHeapRemove(self, self->tiles[tID].heapIndex);
+
+    heapSanityCheck(self);
+}
+
+static void heapSiftDown(Context self, unsigned int curIndex) {
+    unsigned int * eHeap = self->eHeap;
+    tile * tiles = self->tiles;
+
+    unsigned int tID = eHeap[curIndex];
+    float entropy = tiles[tID].entropy;
+
+    while(1) {
+        unsigned int lIndex = curIndex*2;
+        unsigned int rIndex = lIndex+1;
+
+        if (lIndex > eHeap[0]) {
+            break;
+        } else {
+            if ( (lIndex == eHeap[0]) || (tiles[eHeap[lIndex]].entropy < tiles[eHeap[rIndex]].entropy) ) {
+                if (tiles[eHeap[lIndex]].entropy < entropy) {
+                    eHeap[curIndex] = eHeap[lIndex];
+                    tiles[eHeap[curIndex]].heapIndex = curIndex;
+                    curIndex = lIndex;
+                } else {
+                    break;
+                }
+            } else {
+                if (tiles[eHeap[rIndex]].entropy < entropy) {
+                    eHeap[curIndex] = eHeap[rIndex];
+                    tiles[eHeap[curIndex]].heapIndex = curIndex;
+                    curIndex = rIndex;
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+    tiles[tID].heapIndex = curIndex;
+    eHeap[curIndex] = tID;
 }
 
 static void innerHeapRemove(Context self, unsigned int curIndex) {
     unsigned int * eHeap = self->eHeap;
     tile * tiles = self->tiles;
 
-    while(1) {
-        unsigned int lIndex = curIndex*2;
-        unsigned int rIndex = lIndex+1;
-
-//        printf ("DURING HEAPPOP - curIndex %d (lIndex %d, rIndex %d)\n", curIndex, lIndex, rIndex);
-//        coHeapPrint(self);
-
-        if (lIndex == eHeap[0]) {
-            eHeap[curIndex] = eHeap[lIndex];
-            self->tiles[eHeap[curIndex]].heapIndex = curIndex;
-            break;
-        } else if (lIndex > eHeap[0]) {
-            unsigned int endIndex = self->eHeap[0];
-
-            if (endIndex != curIndex) {
-                if (tiles[eHeap[endIndex]].entropy > tiles[eHeap[curIndex]].entropy) {
-                    eHeap[curIndex / 2] = eHeap[endIndex];
-                    self->tiles[eHeap[curIndex]].heapIndex = curIndex;
-                    self->tiles[eHeap[endIndex]].heapIndex = curIndex/2;
-                } else {
-                    eHeap[curIndex] = eHeap[endIndex];
-                    self->tiles[eHeap[endIndex]].heapIndex = curIndex;
-                }
-            }
-            break;
-        }
-        if (tiles[eHeap[lIndex]].entropy < tiles[eHeap[rIndex]].entropy) {
-            eHeap[curIndex] = eHeap[lIndex];
-            self->tiles[eHeap[curIndex]].heapIndex = curIndex;
-            curIndex = lIndex;
-        } else {
-            eHeap[curIndex] = eHeap[rIndex];
-            self->tiles[eHeap[curIndex]].heapIndex = curIndex;
-            curIndex = rIndex;
-        }
-    }
-//    printf ("just finished heappop, about to lose last element\n");
-//    coHeapPrint(self);
+    eHeap[curIndex] = eHeap[eHeap[0]];
+    tiles[eHeap[curIndex]].heapIndex = curIndex;
     eHeap[0]--;
+
+    heapSiftDown(self, curIndex);
 }
 
 void tiRefreshValues(Context self, BlockSet bset, unsigned int tID) {

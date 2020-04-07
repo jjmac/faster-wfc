@@ -118,15 +118,16 @@ static int advance(Engine self) {
         }
         printf("\n");
 
+        printf("Performing initial heapPrint\n");
         coHeapPrint(self->context);
 
         for (int k = 1; k <= self->changedTileIDs[0]; k++) {
-            printf("-- changed tile %d\n", self->changedTileIDs[k]);
+            printf("-- dealing with changed tile %d\n", self->changedTileIDs[k]);
             self->context->tiles[self->changedTileIDs[k]].ctIndex = 0;
             tiHeapRefresh(self->context, self->bset, self->changedTileIDs[k]);
-            coHeapPrint(self->context);
+//            coHeapPrint(self->context);
         }
-        coHeapPrint(self->context);
+//        coHeapPrint(self->context);
         printf("-- autochanged tile %d\n", tID);
         tiRefreshValues(self->context, self->bset, tID);
         self->context->tiles[tID].ctIndex = 0;
