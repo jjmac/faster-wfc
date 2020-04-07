@@ -10,6 +10,9 @@
 #include "tiles.h"
 #include "engine.h"
 
+#define xTileID(tID) (tID % context->xSize)
+#define yTileID(tID) (tID / context->xSize)
+
 struct engine {
     BlockSet bset;
     Context context;
@@ -88,6 +91,7 @@ void enCleanup(Engine self) {
 }
 
 static int advance(Engine self) {
+    Context context = self->context;
     printf("In call to advance()!\n");
 
     // pick a tile to collapse
@@ -104,7 +108,7 @@ static int advance(Engine self) {
     Block block = bsetRandom(self->bset, self->context->tiles[tID].validBlockMask, rand() % (self->context->tiles[tID].freq));
 
     printf(" Got random blockPtr %p\n", block);
-    printf(" Collapsing tile %d to block:\n", tID);
+    printf(" Collapsing tile (%d, %d) to block:\n", xTileID(tID), yTileID(tID));
     blPrint(block);
 
     tiCollapseTo(self->context, tID, block);
@@ -148,9 +152,6 @@ struct visitNode {
     VisitNode next;
 };
 
-#define xTileID(tID) (tID % context->xSize)
-#define yTileID(tID) (tID / context->xSize)
-
 static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask cDifference, VisitNode * toVisit) {
     Context context = self->context;
     BlockSet bset = self->bset;
@@ -159,7 +160,6 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
 
     unsigned int ctID;
     switch(dir) {
-
         case CARD_N:
             if (yTileID(tID) > 0) {
                 ctID = tID - context->xSize;
@@ -221,17 +221,20 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
     printf("\n");
     index = diffBlockIDs[0];
 
+    printf("          - *Actual* diff blockIDs:");
     while (index > 0) {
-        printf("          - Would add(?) block %d\n", diffBlockIDs[index]);
+//        printf("          - Would add(?) block %d\n", diffBlockIDs[index]);
         Block curBlock = bsetLookup(bset, diffBlockIDs[index--]);
 
         if (! bmAndValue(curBlock->overlapMasks[dir], curTile->validBlockMask ) ) {
+            printf("%d,", diffBlockIDs[index+1]);
             blbmAdd(curBlock, cDifference);
-            printf("          - Actually adding block %d, leaves cDiff as:", diffBlockIDs[index+1]);
-            bmPrint(cDifference);
-            printf("\n");
+//            printf("          - Actually adding block %d, leaves cDiff as:", diffBlockIDs[index+1]);
+//            bmPrint(cDifference);
+//            printf("\n");
         }
     }
+    printf("\n");
 
     if (bmTrue(cDifference)) {
         VisitNode nextToVisit = malloc(sizeof(struct visitNode));
@@ -246,19 +249,24 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
         bmAnd(cTile->validBlockMask, cDifference);
     }
 
+    printf("        - New tile (%d, %d) chngd vbm:", xTileID(ctID), yTileID(ctID));
+    bmPrint(cTile->validBlockMask);
+    printf("\n");
+
     return 1;
 }
 
 static void addChangedTile(Engine self, unsigned int ctID) {
-    printf ("=== Adding changed tile %d\n", ctID);
+    Context context = self->context;
+    printf ("      Adding changed tile %d (%d, %d)\n", ctID, xTileID(ctID), yTileID(ctID));
     if (self->context->tiles[ctID].ctIndex == 0) {
 
         self->context->tiles[ctID].ctIndex = self->changedTileIDs[0];
         self->changedTileIDs[0]++;
         self->changedTileIDs[self->changedTileIDs[0]] = ctID;
-        printf ("  Tile %d now in heap at %d\n", ctID, self->context->tiles[ctID].ctIndex);
+        printf ("      Tile %d now in heap at %d\n", ctID, self->context->tiles[ctID].ctIndex);
     } else {
-        printf ("  Tile %d was already in heap at %d - not adding\n", ctID, self->context->tiles[ctID].ctIndex);
+        printf ("      Tile %d was already in heap at %d - not adding\n", ctID, self->context->tiles[ctID].ctIndex);
     }
 }
 
@@ -305,20 +313,28 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
             bmFastCherrypick(curDifference, diffBlockIDs);
             unsigned int index = diffBlockIDs[0];
 
+            printf("    Blocks being removed are:");
             while (index > 0) {
-//                printf("DifflbockIDs index is %d blockID %d", index, diffBlockIDs[index] );
+                printf("%d,", diffBlockIDs[index] );
+                index--;
+            }
+            printf("\n");
+
+            index = diffBlockIDs[0];
+
+            while (index > 0) {
                 Block curBlock = bsetLookup(bset, diffBlockIDs[index--]);
 //                printf("   - hitting the segfault, curBlock is %p\n", curBlock);
 
-                bmOr(nDifference, curBlock->overlapMasks[CARD_N]);
-                bmOr(sDifference, curBlock->overlapMasks[CARD_S]);
-                bmOr(eDifference, curBlock->overlapMasks[CARD_E]);
-                bmOr(wDifference, curBlock->overlapMasks[CARD_W]);
+                bmOr(nDifference, curBlock->overlapMasks[CARD_S]);
+                bmOr(sDifference, curBlock->overlapMasks[CARD_N]);
+                bmOr(eDifference, curBlock->overlapMasks[CARD_W]);
+                bmOr(wDifference, curBlock->overlapMasks[CARD_E]);
 
-                /*
-                printf("   - appending to nDifference:");
+                printf("   - Block %d had enabled(n):", diffBlockIDs[index+1]);
                 bmPrint(curBlock->overlapMasks[CARD_N]);
                 printf("\n");
+                /*
                 printf("   - appending to sDifference:");
                 bmPrint(curBlock->overlapMasks[CARD_S]);
                 printf("\n");
@@ -332,10 +348,10 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
 
             }
 
-            /*
             printf("   - Created nDifference:");
             bmPrint(nDifference);
             printf("\n");
+            /*
             printf("   - Created sDifference:");
             bmPrint(sDifference);
             printf("\n");

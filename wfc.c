@@ -14,7 +14,7 @@ BlockSet bsDefault3();
 
 int main(int argc, char** argv) {
 
-    BlockSet bset = bsDefault2();
+    BlockSet bset = bsDefault3();
 
 //    BlockSet bset = bsetCreate( 3 );
 
@@ -36,7 +36,9 @@ int main(int argc, char** argv) {
 
     bsetLock(bset);
 
-    Context con = coCreate( 2, 2 );
+    bsetPrint(bset);
+
+    Context con = coCreate( 7, 7 );
     Engine en = enCreate(bset, con, 2);
 
 //    enPrepare(en);
@@ -53,14 +55,14 @@ BlockSet bsDefault1() {
     Grid grid = grCreateFromString(preset, 2, 2);
     grPrint(grid);
 
-    BlockSet bset = bsetCreateFromGrid(grid, 2, 1,0);
+    BlockSet bset = bsetCreateFromGrid(grid, 2, 0,0);
     bsetPrint(bset);
     return bset;
 }
 
 BlockSet bsDefault2() {
     char * preset = "" \
-    "A+." \
+    "AAA" \
     "..." \
     "xxx";
 
