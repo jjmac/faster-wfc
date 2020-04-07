@@ -6,6 +6,7 @@ struct tile {
     float entropy;
 
     unsigned int heapIndex;
+    unsigned int ctIndex;
 
     Bitmask validBlockMask;
     Bitmask rippleDifference;

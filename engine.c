@@ -14,10 +14,13 @@ struct engine {
     BlockSet bset;
     Context context;
     int rSeed;
+
+    unsigned int * changedTileIDs;
 };
 
 static int advance(Engine self);
-static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * changedTiles);
+static int rippleChangesFrom(Engine self, unsigned int tID);
+static void addChangedTile(Engine self, unsigned int ctID);
 
 Engine enCreate(BlockSet bset, Context context, int rSeed) {
     Engine self = malloc(sizeof(struct engine));
@@ -48,6 +51,7 @@ void enPrepare(Engine self) {
     for (unsigned int tID = context->xSize*context->ySize - 1; tID != -1; tID--) {
         context->tiles[tID].validBlockMask = bsetTrueMask(bset);
         context->tiles[tID].rippleDifference = bsetFalseMask(bset);
+        context->tiles[tID].ctIndex = 0;
         tiRefreshValues(context, bset, tID);
 
         printf("Tile %d has freq %d ent %f mask:", tID, context->tiles[tID].freq, context->tiles[tID].entropy);
@@ -56,6 +60,8 @@ void enPrepare(Engine self) {
 
         coHeapPush(context, tID);
     }
+
+    self->changedTileIDs = malloc(sizeof(unsigned int) * (context->xSize * context->ySize + 1));
 
     srand(self->rSeed);
 }
@@ -104,25 +110,28 @@ static int advance(Engine self) {
     tiCollapseTo(self->context, tID, block);
     printf(" Done tile collapse!\n");
 
-    unsigned int * changedTiles = malloc(sizeof(unsigned int) * 900);
-    if (rippleChangesFrom(self, tID, changedTiles)) {
+    if (rippleChangesFrom(self, tID)) {
         printf(" Finished rippleChangesFrom() - now refreshing freq/entropy values!\n");
-        printf(" Got %d changed tiles: ", changedTiles[0]);
-        for (int k = 1; k <= changedTiles[0]; k++) {
-            printf("%d, ", changedTiles[k]);
+        printf(" Got %d changed tiles: ", self->changedTileIDs[0]);
+        for (int k = 1; k <= self->changedTileIDs[0]; k++) {
+            printf("%d, ", self->changedTileIDs[k]);
         }
         printf("\n");
 
         coHeapPrint(self->context);
 
-        for (int k = 1; k <= changedTiles[0]; k++) {
-            printf("-- changed tile %d\n", changedTiles[k]);
-            tiHeapRefresh(self->context, self->bset, changedTiles[k]);
+        for (int k = 1; k <= self->changedTileIDs[0]; k++) {
+            printf("-- changed tile %d\n", self->changedTileIDs[k]);
+            self->context->tiles[self->changedTileIDs[k]].ctIndex = 0;
+            tiHeapRefresh(self->context, self->bset, self->changedTileIDs[k]);
             coHeapPrint(self->context);
         }
         coHeapPrint(self->context);
         printf("-- autochanged tile %d\n", tID);
         tiRefreshValues(self->context, self->bset, tID);
+        self->context->tiles[tID].ctIndex = 0;
+
+        self->changedTileIDs[0] = 0;
         return 1;
     } else {
         printf(" Ripple changes failed!\n");
@@ -141,7 +150,7 @@ struct visitNode {
 #define xTileID(tID) (tID % context->xSize)
 #define yTileID(tID) (tID / context->xSize)
 
-static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask cDifference, unsigned int * changedTiles, VisitNode * toVisit) {
+static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask cDifference, VisitNode * toVisit) {
     Context context = self->context;
     BlockSet bset = self->bset;
 
@@ -229,7 +238,7 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
         nextToVisit->next = *toVisit;
         *toVisit = nextToVisit;
 
-        changedTiles[++changedTiles[0]] = ctID;
+        addChangedTile(self, ctID);
 
         bmOr(cTile->rippleDifference, cDifference);
         bmNot(cDifference);
@@ -239,9 +248,21 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
     return 1;
 }
 
-static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * changedTiles) {
+static void addChangedTile(Engine self, unsigned int ctID) {
+    printf ("=== Adding changed tile %d\n", ctID);
+    if (self->context->tiles[ctID].ctIndex == 0) {
+
+        self->context->tiles[ctID].ctIndex = self->changedTileIDs[0];
+        self->changedTileIDs[0]++;
+        self->changedTileIDs[self->changedTileIDs[0]] = ctID;
+        printf ("  Tile %d now in heap at %d\n", ctID, self->context->tiles[ctID].ctIndex);
+    } else {
+        printf ("  Tile %d was already in heap at %d - not adding\n", ctID, self->context->tiles[ctID].ctIndex);
+    }
+}
+
+static int rippleChangesFrom(Engine self, unsigned int tID) {
     printf("   In call to rippleChangesFrom()!\n");
-    changedTiles[0] = 0;
 
     Context context = self->context;
     BlockSet bset = self->bset;
@@ -282,24 +303,24 @@ static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * chang
 
             bmFastCherrypick(curDifference, diffBlockIDs);
             unsigned int index = diffBlockIDs[0];
+
             while (index > 0) {
+//                printf("DifflbockIDs index is %d blockID %d", index, diffBlockIDs[index] );
                 Block curBlock = bsetLookup(bset, diffBlockIDs[index--]);
+//                printf("   - hitting the segfault, curBlock is %p\n", curBlock);
 
                 bmOr(nDifference, curBlock->overlapMasks[CARD_N]);
                 bmOr(sDifference, curBlock->overlapMasks[CARD_S]);
                 bmOr(eDifference, curBlock->overlapMasks[CARD_E]);
                 bmOr(wDifference, curBlock->overlapMasks[CARD_W]);
 
-
+                /*
                 printf("   - appending to nDifference:");
                 bmPrint(curBlock->overlapMasks[CARD_N]);
                 printf("\n");
-
-
                 printf("   - appending to sDifference:");
                 bmPrint(curBlock->overlapMasks[CARD_S]);
                 printf("\n");
-                /*
                 printf("   - Adjusting eDifference:");
                 bmPrint(eDifference);
                 printf("\n");
@@ -310,6 +331,7 @@ static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * chang
 
             }
 
+            /*
             printf("   - Created nDifference:");
             bmPrint(nDifference);
             printf("\n");
@@ -322,11 +344,12 @@ static int rippleChangesFrom(Engine self, unsigned int tID, unsigned int * chang
             printf("   - Created wDifference:");
             bmPrint(wDifference);
             printf("\n");
+            */
 
-            processChildTile(self, tID, CARD_N, nDifference, changedTiles, &toVisit);
-            processChildTile(self, tID, CARD_S, sDifference, changedTiles, &toVisit);
-            processChildTile(self, tID, CARD_E, eDifference, changedTiles, &toVisit);
-            processChildTile(self, tID, CARD_W, wDifference, changedTiles, &toVisit);
+            processChildTile(self, tID, CARD_N, nDifference, &toVisit);
+            processChildTile(self, tID, CARD_S, sDifference, &toVisit);
+            processChildTile(self, tID, CARD_E, eDifference, &toVisit);
+            processChildTile(self, tID, CARD_W, wDifference, &toVisit);
 
             bmDestroy(nDifference);
             bmDestroy(sDifference);

@@ -380,7 +380,7 @@ Bitmask bsetTrueMask(BlockSet self){
     return nbmCopy(self->allTrueMask);
 }
 Bitmask bsetFalseMask(BlockSet self){
-    return nbmNot(self->allTrueMask);
+    return bmCreate( ((self->len-1) / FIELD_LEN) + 1 );
 }
 
 int bsetTestSymmetry(BlockSet self) {
