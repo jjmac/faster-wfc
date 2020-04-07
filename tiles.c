@@ -11,11 +11,16 @@
 
 #include "benchmarking.h"
 
+#define DEBUG_OLD_HEAP_REFRESH 0
+#define CHECK_HEAPS 0
+
 float bHeapPushTime = 0;
 float bHeapRefreshTime = 0;
+int bHeapRefreshCalls = 0;
 float bSiftDownTime = 0;
 
 static void innerHeapRemove(Context self, unsigned int curIndex);
+static void heapSiftDown(Context self, unsigned int curIndex);
 
 Context coCreate(unsigned short xSize, unsigned short ySize) {
     Context self = malloc(sizeof(struct context));
@@ -52,6 +57,7 @@ void coPrint(Context self) {
 }
 
 static void heapSanityCheck(Context self){
+#if CHECK_HEAPS
 //    printf("      Sanity-checking heap with %d elements\n", self->eHeap[0]);
     for (int k = 1; k <= self->eHeap[0]; k++) {
         tile t = self->tiles[self->eHeap[k]];
@@ -61,6 +67,7 @@ static void heapSanityCheck(Context self){
             assert(0);
         }
     }
+#endif
 }
 
 void coHeapPrint(Context self) {
@@ -125,16 +132,34 @@ void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
         printf("!!!!! Tried to remove tile %d from heap\n", tID);
         assert (1 == 0);
     }
+
+#if DEBUG_OLD_HEAP_REFRESH
     coHeapRemove(self, tID);
 //    coHeapPrint(self);
     tiRefreshValues(self, bset, tID);
     if (self->tiles[tID].entropy > 0) {
         coHeapPush(self, tID);
+    } else {
+        self->tiles[tID].heapIndex = 0;
     }
+#else
+//    float oldEntropy = self->tiles[tID].entropy;
+    tiRefreshValues(self, bset, tID);
+
+    if (self->tiles[tID].entropy == 0) {
+        coHeapRemove(self, tID);
+        self->tiles[tID].heapIndex = 0;
+    } else {
+        heapSiftDown(self, self->tiles[tID].heapIndex);
+    }
+#endif
+
 #if DEBUG_BENCH
     bHeapRefreshTime += clock() - startTime;
+    bHeapRefreshCalls++;
 #endif
 }
+
 
 void coHeapRemove(Context self, unsigned int tID) {
 //    printf("      Removing tile %d from heap with %d elements!\n", tID, self->eHeap[0]);

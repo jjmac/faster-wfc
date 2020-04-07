@@ -20,6 +20,7 @@ extern float bCoreLoopTime;
 extern float bRippleTime;
 extern float bHeapPushTime;
 extern float bHeapRefreshTime;
+extern int bHeapRefreshCalls;
 extern float bSiftDownTime;
 extern float bEntropyTime;
 
@@ -28,6 +29,7 @@ void benchprint(){
     printf("RippleChanges() time: %f\n", bRippleTime/CLOCKS_PER_SEC);
     printf("Heap push time: %f\n", bHeapPushTime/CLOCKS_PER_SEC);
     printf("Heap refresh time: %f\n", bHeapRefreshTime/CLOCKS_PER_SEC);
+    printf("Heap refresh calls: %d\n", bHeapRefreshCalls);
     printf("Heap sift time: %f\n", bSiftDownTime/CLOCKS_PER_SEC);
     printf("Entropy time: %f\n", bEntropyTime/CLOCKS_PER_SEC);
 }
@@ -60,8 +62,8 @@ int main(int argc, char** argv) {
 
 //    bsetPrint(bset);
 
-    Context con = coCreate( 100, 100 );
-    Engine en = enCreate(bset, con, 0);
+    Context con = coCreate( 200, 200 );
+    Engine en = enCreate(bset, con, 1);
 
 //    enPrepare(en);
     enRun(en);

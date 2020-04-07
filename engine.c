@@ -106,7 +106,7 @@ void enCleanup(Engine self) {
 static int advance(Engine self) {
     printf("In call to advance()!\n");
     Context context = self->context;
-    unsigned int tID;
+    unsigned int tID = 0;
 
     // pick a tile to collapse
     if (self->context->eHeap[0] > 0) {
@@ -139,12 +139,13 @@ static int advance(Engine self) {
 //    printf(" Done tile collapse!\n");
 
     if (rippleChangesFrom(self, tID)) {
-//        printf(" Finished rippleChangesFrom() - now refreshing freq/entropy values!\n");
-//        printf(" Got %d changed tiles: ", self->changedTileIDs[0]);
-//        for (int k = 1; k <= self->changedTileIDs[0]; k++) {
-//            printf("%d, ", self->changedTileIDs[k]);
-//        }
-//        printf("\n");
+/*        printf(" Finished rippleChangesFrom() - now refreshing freq/entropy values!\n");
+        printf(" Got %d changed tiles: ", self->changedTileIDs[0]);
+        for (int k = 1; k <= self->changedTileIDs[0]; k++) {
+            printf("%d, ", self->changedTileIDs[k]);
+        }
+        printf("\n");
+*/
 
         for (int k = 1; k <= self->changedTileIDs[0]; k++) {
 //            printf("-- dealing with changed tile %d\n", self->changedTileIDs[k]);
@@ -307,7 +308,7 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
 #if DEBUG_BENCH
     float startTime = clock();
 #endif
-    printf("   In call to rippleChangesFrom()!\n");
+//    printf("   In call to rippleChangesFrom()!\n");
 
     Context context = self->context;
     BlockSet bset = self->bset;
