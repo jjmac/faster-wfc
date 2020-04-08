@@ -383,15 +383,18 @@ void bsetEntropy(BlockSet self, Bitmask bm, unsigned int * freq, float * entropy
 }
 
 char bsetBlockToValue(BlockSet self, Bitmask bm){
+    char bValue = -1;
     for (int k = self->len - 1; k >= 0; k--) {
         Block block = bsetLookup(self, k);
         if (blbmContains(block, bm)) {
-//            return '0' + k;
-            return block->values[0];
+            if (bValue == -1) {
+                bValue = block->values[0];
+            } else {
+                return -1;
+            }
         }
     }
-    assert(1==0);
-    return 0;
+    return bValue;
 }
 
 Bitmask bsetTrueMask(BlockSet self){

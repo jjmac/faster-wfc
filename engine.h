@@ -2,8 +2,9 @@ typedef struct engine * Engine;
 
 Engine enCreate(BlockSet bset, Context context, int rSeed);
 void enDestroy(Engine self);
-void enRun(Engine self);
+int enRun(Engine self);
 
 void enPrepare(Engine self);
-void enCoreLoop(Engine self);
+int enRecursiveCoreLoop(Engine self, int maxContradictions, int checkpointInterval);
 void enCleanup(Engine self);
+void enPrint(Engine self);

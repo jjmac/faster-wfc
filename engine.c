@@ -26,8 +26,17 @@ struct engine {
     unsigned int * changedTileIDs;
 };
 
+// TODO: Rewrite this function so that it weaves a linkedlist through context->tiles rather than constructing a paralell list!
+typedef struct visitNode * VisitNode;
+struct visitNode {
+    unsigned int tID;
+    VisitNode next;
+};
+
+static int enCoreLoop(Engine self, int toCollapseThreshold);
 static int advance(Engine self);
 static int rippleChangesFrom(Engine self, unsigned int tID);
+static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask cDifference, VisitNode * toVisit);
 static void addChangedTile(Engine self, unsigned int ctID);
 
 Engine enCreate(BlockSet bset, Context context, int rSeed) {
@@ -43,45 +52,88 @@ void enDestroy(Engine self) {
     free(self);
 }
 
-void enRun(Engine self) {
+int enRun(Engine self) {
     printf("=== Starting run!\n");
     enPrepare(self);
     printf("=== Prepare call complete!\n");
-    enCoreLoop(self);
+    if (!enRecursiveCoreLoop(self, 10, 1000)) {
+        printf("=== Contradiction error - exiting!\n");
+        return 0;
+    }
     printf("=== Core loop complete!\n");
     enCleanup(self);
+    return 1;
 }
 
 void enPrepare(Engine self) {
-    printf("= In prepare!\n");
-
     coPrepare(self->context, self->bset);
 
-    self->changedTileIDs[0] = 0;
     srand(self->rSeed);
 }
 
-void enCoreLoop(Engine self) {
+static int enCoreLoop(Engine self, int toCollapseThreshold) {
 #if DEBUG_BENCH
     float startTime = clock();
 #endif
-    while (self->context->lastCollapsedTile != -1) {
-//        printf("= In core loop - advancing (%d tiles remain, %d in heap)!\n", self->context->lastCollapsedTile, self->context->eHeap[0]);
+
+    if (toCollapseThreshold < 0) {
+        toCollapseThreshold = 0;
+    }
+
+//    printf("= In core loop - (%d tiles remain, threshold %d)!\n", self->context->toCollapse, toCollapseThreshold);
+
+    while (self->context->toCollapse > toCollapseThreshold) {
+//        printf("= In core loop - advancing (%d tiles remain, %d in heap)!\n", self->context->toCollapse, self->context->eHeap[0]);
 //        coHeapPrint(self->context);
-        advance(self);
+        if (!advance(self)) {
+            return 0;
+        }
     }
 #if DEBUG_BENCH
     bCoreLoopTime += clock() - startTime;
 #endif
+    return 1;
+}
+
+int enRecursiveCoreLoop(Engine self, int maxContradictions, int checkpointInterval) {
+    if (self->context->toCollapse == 0) {
+        return 1;
+    }
+
+    Context backupContext = coCopy(self->context);
+
+    int origMaxContradictions = maxContradictions;
+
+    while (maxContradictions > 0) {
+        printf("Calling core loop with %d to collapse\n", self->context->toCollapse);
+        if (enCoreLoop(self, self->context->toCollapse - checkpointInterval)) {
+            if (enRecursiveCoreLoop(self, origMaxContradictions, checkpointInterval)) {
+                coDestroy(backupContext);
+                return 1;
+            }
+        }
+        maxContradictions--;
+//        printf("State is:\n");
+//        enPrint(self);
+        printf("Contradiction error: %d attempts left (toCollapse is %d)\n", maxContradictions, self->context->toCollapse);
+        coDestroy(self->context);
+        self->context = coCopy(backupContext);
+    }
+    return 0;
 }
 
 void enCleanup(Engine self) {
+//    enPrint(self);
+}
+
+void enPrint(Engine self) {
     Context context = self->context;
     BlockSet bset = self->bset;
-
     for (unsigned int tID = 0; tID < context->xSize*context->ySize; tID++) {
         context->tiles[tID].value = bsetBlockToValue(bset, context->tiles[tID].validBlockMask);
         putchar(context->tiles[tID].value);
+
+//        printf("%d", tID);
         if ((tID+1) % context->xSize == 0) {
             putchar('\n');
         }
@@ -89,6 +141,8 @@ void enCleanup(Engine self) {
 }
 
 static int advance(Engine self) {
+    self->changedTileIDs[0] = 0;
+
 //    printf("In call to advance()!\n");
     Context context = self->context;
     unsigned int tID = 0;
@@ -97,13 +151,14 @@ static int advance(Engine self) {
     if (self->context->eHeap[0] > 0) {
         tID = coHeapPop(self->context);
     } else {
-        while (context->lastCollapsedTile != -1) {
-            if (context->tiles[context->lastCollapsedTile].heapIndex == 0 && context->tiles[context->lastCollapsedTile].entropy > 0) {
-                tID = context->lastCollapsedTile;
+        for (tID = context->xSize * context->ySize - 1; tID != -1; tID--) {
+            if (context->tiles[tID].heapIndex == 0 && context->tiles[tID].entropy > 0) {
                 break;
             }
-            context->lastCollapsedTile--;
         }
+    }
+    if (tID == -1) {
+        assert(0);
     }
 
 //    printf(" Got random tID: %d\n", tID);
@@ -145,6 +200,8 @@ static int advance(Engine self) {
                 if (self->context->tiles[self->changedTileIDs[k]].entropy > 0) {
 //                    printf("  -- coHeapPush %e vs\n", self->context->tiles[self->changedTileIDs[k]].entropy);
                     coHeapPush(self->context, self->changedTileIDs[k]);
+                } else {
+                    self->context->toCollapse--;
                 }
             }
 //            coHeapPrint(self->context);
@@ -155,21 +212,12 @@ static int advance(Engine self) {
 //        tiRefreshValues(self->context, self->bset, tID);
 //        self->context->tiles[tID].ctIndex = 0;
 
-        self->changedTileIDs[0] = 0;
         return 1;
     } else {
 //        printf(" Ripple changes failed!\n");
-        assert(0);
         return 0;
     }
 }
-
-// TODO: Rewrite this function so that it weaves a linkedlist through context->tiles rather than constructing a paralell list!
-typedef struct visitNode * VisitNode;
-struct visitNode {
-    unsigned int tID;
-    VisitNode next;
-};
 
 static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask cDifference, VisitNode * toVisit) {
     Context context = self->context;

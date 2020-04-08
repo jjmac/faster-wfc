@@ -50,14 +50,36 @@ void coPrepare(Context self, BlockSet bset) {
     self->prepared = 1;
 
     self->eHeap[0] = 0;
-    self->lastCollapsedTile = self->xSize*self->ySize-1;
-    for (unsigned int tID = self->lastCollapsedTile; tID != -1; tID--) {
+    self->toCollapse = self->xSize*self->ySize;
+    for (unsigned int tID = self->toCollapse-1; tID != -1; tID--) {
         self->tiles[tID].validBlockMask = bsetTrueMask(bset);
         self->tiles[tID].rippleDifference = bsetFalseMask(bset);
         self->tiles[tID].ctIndex = 0;
         self->tiles[tID].heapIndex = 0;
         tiRefreshValues(self, bset, tID);
     }
+}
+
+Context coCopy(Context self) {
+    assert(self->prepared);
+    Context other = coCreate(self->xSize, self->ySize);
+
+    other->prepared = 1;
+    for (unsigned int hIndex = self->eHeap[0]; hIndex != -1; hIndex--) {
+        other->eHeap[hIndex] = self->eHeap[hIndex];
+    }
+    other->toCollapse = self->toCollapse;
+    for (unsigned int tID = self->xSize*self->ySize-1; tID != -1; tID--) {
+        other->tiles[tID].validBlockMask = nbmCopy(self->tiles[tID].validBlockMask);
+        other->tiles[tID].rippleDifference = nbmCopy(self->tiles[tID].rippleDifference);
+        other->tiles[tID].ctIndex = self->tiles[tID].ctIndex;
+        other->tiles[tID].heapIndex = self->tiles[tID].heapIndex;
+
+        other->tiles[tID].freq = self->tiles[tID].freq;
+        other->tiles[tID].entropy = self->tiles[tID].entropy;
+        other->tiles[tID].value = self->tiles[tID].value;
+    }
+    return other;
 }
 
 void coPrint(Context self) {
@@ -164,6 +186,7 @@ void tiHeapRefresh(Context self, BlockSet bset, unsigned int tID) {
 //        printf("      Consequently removing tile %d from heap!\n", tID);
         coHeapRemove(self, tID);
         self->tiles[tID].heapIndex = 0;
+        self->toCollapse--;
     } else {
 //        printf("      Consequently sifting tile %d around in heap!\n", tID);
         heapSiftDown(self, self->tiles[tID].heapIndex);

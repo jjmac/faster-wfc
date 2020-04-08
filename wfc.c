@@ -111,6 +111,22 @@ void testMemory() {
     coDestroy(con);
     bsetDestroy(bset);
 
+    printf("Testing copied context w/ 100-element blockset\n");
+
+    con = coCreate(10, 10);
+    bset = bsetCreate(3);
+    for (int k = 0; k < 100; k++) {
+        sprintf(str, "%d.........", k);
+        bl = blCreateFromString(3, str);
+        bsetAppend(bset, bl);
+    }
+    bsetLock(bset);
+    coPrepare(con, bset);
+    Context con2 = coCopy(con);
+    coDestroy(con);
+    coDestroy(con2);
+    bsetDestroy(bset);
+
     printf("Testing reuse of blockset between contexts\n");
 
     bset = bsetCreate(3);
@@ -178,6 +194,7 @@ void testMemory() {
     coDestroy(con);
     bsetDestroy(bset);
 
+
     printf("Testing enRun (many blocks, 1600 tiles)\n");
 
     bset = flowers(4);
@@ -193,40 +210,25 @@ void testMemory() {
 }
 
 int main(int argc, char** argv) {
-    testMemory();
-    return 0;
-
+//    testMemory();
+//    return 0;
 
     BlockSet bset = flowers(3);
-//    BlockSet bset = redMaze();
-
-//    BlockSet bset = bsetCreate( 3 );
-
-//    bsetAppend(bset, blCreateFromString(3, "aaa...bbb"));
-//    bsetAppend(bset, blCreateFromString(3, "...aaa..."));
-
-
-//    bsetAppend(bset, blCreateFromString(2, "aaaa"));
-
-//    bsetAppend(bset, blCreateFromString(2, "..aa"));
-//    bsetAppend(bset, blCreateFromString(2, "aa.."));
-/*
-    bsetAppend(bset, blCreateFromString(2, "aaaa"));
-    bsetAppend(bset, blCreateFromString(2, "bbbb"));
-    bsetAppend(bset, blCreateFromString(2, "cccc"));
-    bsetAppend(bset, blCreateFromString(2, "dddd"));
-    bsetAppend(bset, blCreateFromString(2, "dddd"));
-*/
 
     bsetLock(bset);
 
     bsetPrint(bset);
 
     Context con = coCreate( 100, 100 );
-    Engine en = enCreate(bset, con, 100);
+    Engine en = enCreate(bset, con, 110);
 
 //    enPrepare(en);
-    enRun(en);
+    if (enRun(en)) {
+        enPrint(en);
+    }
+
+    enDestroy(en);
+    bsetDestroy(bset);
 
 #if DEBUG_BENCH
     benchprint();
