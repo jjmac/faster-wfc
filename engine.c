@@ -35,9 +35,11 @@ Engine enCreate(BlockSet bset, Context context, int rSeed) {
     self->bset = bset;
     self->context = context;
     self->rSeed = rSeed;
+    self->changedTileIDs = malloc(sizeof(unsigned int) * (context->xSize * context->ySize + 1));
     return self;
 }
 void enDestroy(Engine self) {
+    free(self->changedTileIDs);
     free(self);
 }
 
@@ -51,15 +53,11 @@ void enRun(Engine self) {
 }
 
 void enPrepare(Engine self) {
-    Context context = self->context;
-    BlockSet bset = self->bset;
-
     printf("= In prepare!\n");
 
-    coPrepare(context, bset);
+    coPrepare(self->context, self->bset);
 
-    self->changedTileIDs = malloc(sizeof(unsigned int) * (context->xSize * context->ySize + 1));
-
+    self->changedTileIDs[0] = 0;
     srand(self->rSeed);
 }
 
@@ -113,7 +111,6 @@ static int advance(Engine self) {
 //    printf(" Tile blockmask is %p, freq %d\n", self->context->tiles[tID].validBlockMask, self->context->tiles[tID].freq);
 
 //    coHeapPrint(self->context);
-
 
     // pick a block to collapse it to
     Block block = bsetRandom(self->bset, self->context->tiles[tID].validBlockMask, rand() % (self->context->tiles[tID].freq));
@@ -315,7 +312,9 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
         curTile = &(context->tiles[tID]);
         curDifference = curTile->rippleDifference;
 
+        VisitNode oldToVisit = toVisit;
         toVisit = toVisit->next;
+        free(oldToVisit);
 
 //        printf("   - Visiting tile (%d, %d) with vbm:", xTileID(tID), yTileID(tID));
 //        bmPrint(curTile->validBlockMask);

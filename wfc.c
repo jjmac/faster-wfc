@@ -143,12 +143,46 @@ void testMemory() {
     coDestroy(con);
     bsetDestroy(bset);
 
-    printf("Testing enRun (one block, one tile)\n");
+    printf("Testing enRun (1 block, 1 tile)\n");
 
     bset = bsetCreate(2);
     bsetAppend(bset, blCreateFromString(2, "aaaa"));
     bsetLock(bset);
     con = coCreate(1, 1);
+    en = enCreate(bset, con, 0);
+    enRun(en);
+    enDestroy(en);
+    coDestroy(con);
+    bsetDestroy(bset);
+
+    printf("Testing enRun (one block, 100 tiles)\n");
+
+    bset = bsetCreate(2);
+    bsetAppend(bset, blCreateFromString(2, "aaaa"));
+    bsetLock(bset);
+    con = coCreate(10, 10);
+    en = enCreate(bset, con, 0);
+    enRun(en);
+    enDestroy(en);
+    coDestroy(con);
+    bsetDestroy(bset);
+
+    printf("Testing enRun (many blocks, 100 tiles)\n");
+
+    bset = flowers(4);
+    bsetLock(bset);
+    con = coCreate(10, 10);
+    en = enCreate(bset, con, 0);
+    enRun(en);
+    enDestroy(en);
+    coDestroy(con);
+    bsetDestroy(bset);
+
+    printf("Testing enRun (many blocks, 1600 tiles)\n");
+
+    bset = flowers(4);
+    bsetLock(bset);
+    con = coCreate(40, 40);
     en = enCreate(bset, con, 0);
     enRun(en);
     enDestroy(en);
@@ -306,10 +340,8 @@ BlockSet flowers(int size) {
     "ggggggggggggggg";
 
     Grid grid = grCreateFromString(preset, 15, 23);
-//    grPrint(grid);
 
     BlockSet bset = bsetCreateFromGrid(grid, size, 1,1);
-//    bsetPrint(bset);
 
     grDestroy(grid);
     return bset;

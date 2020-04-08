@@ -174,9 +174,6 @@ void bmCherrypick(Bitmask self, unsigned int * output) {
 }
 
 void bmFastCherrypick(Bitmask self, unsigned int * output) {
-//    printf("    Running a fast cherrypick of bitmask:");
-//    bmPrint(self);
-//    printf("\n");
 //    printf("    Output x is %p\n", output);
     int oLen = 0;
     for(unsigned int k = self->len-1; k != -1; k--) {

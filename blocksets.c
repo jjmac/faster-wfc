@@ -246,6 +246,7 @@ void bsetLock(BlockSet self) {
 
     unsigned char numFields = ((self->len-1) / FIELD_LEN) + 1;
     self->allTrueMask = bmCreate(numFields);
+    bmClear(self->allTrueMask);
 
     while (self->blockList != NULL) {
         curBlock = self->blockList->value;
@@ -321,7 +322,6 @@ Block bsetRandom(BlockSet self, Bitmask mask, int roll){
 //        printf("%d,", cherrypickValues[k]);
 //    }
 //    printf("\n");
-
     for (int k = cherrypickValues[0]; k > 0; k--) {
         Block block = self->blocks[cherrypickValues[k]];
 //        printf("   Got block w/freq %d!\n", block->freq);
@@ -398,7 +398,9 @@ Bitmask bsetTrueMask(BlockSet self){
     return nbmCopy(self->allTrueMask);
 }
 Bitmask bsetFalseMask(BlockSet self){
-    return bmCreate( ((self->len-1) / FIELD_LEN) + 1 );
+    Bitmask bm = bmCreate( ((self->len-1) / FIELD_LEN) + 1 );
+    bmClear(bm);
+    return bm;
 }
 
 int bsetTestSymmetry(BlockSet self) {

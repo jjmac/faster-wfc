@@ -49,6 +49,7 @@ void coDestroy(Context self) {
 void coPrepare(Context self, BlockSet bset) {
     self->prepared = 1;
 
+    self->eHeap[0] = 0;
     self->lastCollapsedTile = self->xSize*self->ySize-1;
     for (unsigned int tID = self->lastCollapsedTile; tID != -1; tID--) {
         self->tiles[tID].validBlockMask = bsetTrueMask(bset);
