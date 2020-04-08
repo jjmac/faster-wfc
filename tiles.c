@@ -29,19 +29,36 @@ Context coCreate(unsigned short xSize, unsigned short ySize) {
     self->ySize = ySize;
     self->tiles = malloc(sizeof(tile) * (xSize * ySize));
     self->eHeap = malloc(sizeof(unsigned int) * (xSize * ySize + 1));
+    self->prepared = 0;
     assert(self->tiles != NULL);
     return self;
 }
 
 void coDestroy(Context self) {
-    for (unsigned int k = self->xSize * self->ySize - 1; k >= 0; k--) {
-        bmDestroy(self->tiles[k].validBlockMask);
-        bmDestroy(self->tiles[k].rippleDifference);
+    if (self->prepared) {
+        for (unsigned int k = self->xSize * self->ySize - 1; k != -1; k--) {
+//            printf("Destroying context - k is %d, tiles[k] is %p\n", k, self->tiles[k].validBlockMask);
+            bmDestroy(self->tiles[k].validBlockMask);
+            bmDestroy(self->tiles[k].rippleDifference);
+        }
     }
     free(self->tiles);
     free(self->eHeap);
     free(self);
 }
+void coPrepare(Context self, BlockSet bset) {
+    self->prepared = 1;
+
+    self->lastCollapsedTile = self->xSize*self->ySize-1;
+    for (unsigned int tID = self->lastCollapsedTile; tID != -1; tID--) {
+        self->tiles[tID].validBlockMask = bsetTrueMask(bset);
+        self->tiles[tID].rippleDifference = bsetFalseMask(bset);
+        self->tiles[tID].ctIndex = 0;
+        self->tiles[tID].heapIndex = 0;
+        tiRefreshValues(self, bset, tID);
+    }
+}
+
 void coPrint(Context self) {
     printf("Context:\n");
     for (unsigned int y = 0; y < self->ySize; y++) {

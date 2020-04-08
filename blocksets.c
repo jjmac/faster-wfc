@@ -175,18 +175,19 @@ static void bsetDestroyUnlocked(BlockSet self) {
     while (self->blockList != NULL) {
         BlockListNode oldNode = self->blockList;
         self->blockList = self->blockList->next;
-        bmDestroy(oldNode->value->overlapMasks[CARD_N]);
-        bmDestroy(oldNode->value->overlapMasks[CARD_S]);
-        bmDestroy(oldNode->value->overlapMasks[CARD_E]);
-        bmDestroy(oldNode->value->overlapMasks[CARD_W]);
         blDestroy(oldNode->value);
         free(oldNode);
     }
 }
 static void bsetDestroyLocked(BlockSet self) {
-    for (int k = self->len; k >= 0; k--) {
+    for (int k = self->len-1; k >= 0; k--) {
+        bmDestroy(self->blocks[k]->overlapMasks[CARD_N]);
+        bmDestroy(self->blocks[k]->overlapMasks[CARD_S]);
+        bmDestroy(self->blocks[k]->overlapMasks[CARD_E]);
+        bmDestroy(self->blocks[k]->overlapMasks[CARD_W]);
         blDestroy(self->blocks[k]);
     }
+    bmDestroy(self->allTrueMask);
     free(self->blocks);
 }
 

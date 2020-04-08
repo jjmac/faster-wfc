@@ -38,8 +38,130 @@ void benchprint(){
     printf("Entropy time: %f\n", bEntropyTime/CLOCKS_PER_SEC);
 }
 
+void testMemory() {
+    BlockSet bset;
+    Block bl;
+    Context con;
+    Engine en;
+    char str[40];
+
+    printf("Testing block\n");
+
+    bl = blCreateFromString(3, "aaa...bbb");
+    blDestroy(bl);
+
+    printf("Testing empty block set\n");
+
+    bset = bsetCreate(3);
+    bsetDestroy(bset);
+
+    printf("Testing 1-element block set\n");
+
+    bset = bsetCreate(3);
+    bl = blCreateFromString(3, "aaa...bbb");
+    bsetAppend(bset, bl);
+    bsetDestroy(bset);
+
+    printf("Testing locked 1-element blockset\n");
+
+    bset = bsetCreate(3);
+    bl = blCreateFromString(3, "aaa...bbb");
+    bsetAppend(bset, bl);
+    bsetLock(bset);
+    bsetDestroy(bset);
+
+    printf("Testing locked 100-element blockset\n");
+
+    bset = bsetCreate(3);
+    for (int k = 0; k < 100; k++) {
+        sprintf(str, "%d.........", k);
+        bl = blCreateFromString(3, str);
+        bsetAppend(bset, bl);
+    }
+    bsetLock(bset);
+    bsetDestroy(bset);
+
+    printf("Testing context\n");
+
+    con = coCreate(10, 10);
+    coDestroy(con);
+
+    printf("Testing prepared context w/ 1-element blockset\n");
+
+    con = coCreate(10, 10);
+    bset = bsetCreate(3);
+    bl = blCreateFromString(3, "aaa...bbb");
+    bsetAppend(bset, bl);
+    bsetLock(bset);
+    coPrepare(con, bset);
+    coDestroy(con);
+    bsetDestroy(bset);
+
+    printf("Testing prepared context w/ 100-element blockset\n");
+
+    con = coCreate(10, 10);
+    bset = bsetCreate(3);
+    for (int k = 0; k < 100; k++) {
+        sprintf(str, "%d.........", k);
+        bl = blCreateFromString(3, str);
+        bsetAppend(bset, bl);
+    }
+    bsetLock(bset);
+    coPrepare(con, bset);
+    coDestroy(con);
+    bsetDestroy(bset);
+
+    printf("Testing reuse of blockset between contexts\n");
+
+    bset = bsetCreate(3);
+    for (int k = 0; k < 100; k++) {
+        sprintf(str, "%d.........", k);
+        bl = blCreateFromString(3, str);
+        bsetAppend(bset, bl);
+    }
+    bsetLock(bset);
+    con = coCreate(10, 10);
+    coPrepare(con, bset);
+    coDestroy(con);
+    con = coCreate(10, 10);
+    coPrepare(con, bset);
+    coDestroy(con);
+    bsetDestroy(bset);
+
+    printf("Testing engine\n");
+
+    bset = bsetCreate(3);
+    for (int k = 0; k < 100; k++) {
+        sprintf(str, "%d.........", k);
+        bl = blCreateFromString(3, str);
+        bsetAppend(bset, bl);
+    }
+    bsetLock(bset);
+    con = coCreate(10, 10);
+    en = enCreate(bset, con, 0);
+    enDestroy(en);
+    coDestroy(con);
+    bsetDestroy(bset);
+
+    printf("Testing enRun (one block, one tile)\n");
+
+    bset = bsetCreate(2);
+    bsetAppend(bset, blCreateFromString(2, "aaaa"));
+    bsetLock(bset);
+    con = coCreate(1, 1);
+    en = enCreate(bset, con, 0);
+    enRun(en);
+    enDestroy(en);
+    coDestroy(con);
+    bsetDestroy(bset);
+
+    printf("All tests passed!\n");
+}
 
 int main(int argc, char** argv) {
+    testMemory();
+    return 0;
+
 
     BlockSet bset = flowers(3);
 //    BlockSet bset = redMaze();
@@ -188,5 +310,7 @@ BlockSet flowers(int size) {
 
     BlockSet bset = bsetCreateFromGrid(grid, size, 1,1);
 //    bsetPrint(bset);
+
+    grDestroy(grid);
     return bset;
 }

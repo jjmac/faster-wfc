@@ -56,20 +56,7 @@ void enPrepare(Engine self) {
 
     printf("= In prepare!\n");
 
-    context->lastCollapsedTile = context->xSize*context->ySize-1;
-    for (unsigned int tID = context->lastCollapsedTile; tID != -1; tID--) {
-        context->tiles[tID].validBlockMask = bsetTrueMask(bset);
-        context->tiles[tID].rippleDifference = bsetFalseMask(bset);
-        context->tiles[tID].ctIndex = 0;
-        context->tiles[tID].heapIndex = 0;
-        tiRefreshValues(context, bset, tID);
-
-//        printf("Tile %d has freq %d ent %f mask:", tID, context->tiles[tID].freq, context->tiles[tID].entropy);
-//        bmPrint(context->tiles[tID].validBlockMask);
-//        printf("\n");
-
-//        coHeapPush(context, tID);
-    }
+    coPrepare(context, bset);
 
     self->changedTileIDs = malloc(sizeof(unsigned int) * (context->xSize * context->ySize + 1));
 

@@ -19,10 +19,13 @@ struct context {
     tile * tiles;
     unsigned int * eHeap;
     unsigned int lastCollapsedTile;
+
+    int prepared;
 };
 
 Context coCreate(unsigned short xSize, unsigned short ySize);
 void coDestroy(Context self);
+void coPrepare(Context self, BlockSet bset);
 void coPrint(Context self);
 
 void coHeapPrint(Context self);
