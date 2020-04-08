@@ -21,7 +21,6 @@ float bRippleTime = 0;
 struct engine {
     BlockSet bset;
     Context context;
-    int rSeed;
 
     unsigned int * changedTileIDs;
 };
@@ -35,26 +34,32 @@ struct visitNode {
 
 static int enCoreLoop(Engine self, int toCollapseThreshold);
 static int advance(Engine self);
+static int initialRippleChangesFrom(Engine self, unsigned int tID);
 static int rippleChangesFrom(Engine self, unsigned int tID);
 static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask cDifference, VisitNode * toVisit);
 static void addChangedTile(Engine self, unsigned int ctID);
 
-Engine enCreate(BlockSet bset, int xSize, int ySize, int rSeed) {
+Engine enCreate(BlockSet bset, int xSize, int ySize) {
     Engine self = malloc(sizeof(struct engine));
     self->bset = bset;
     self->context = coCreate(xSize, ySize);
-    self->rSeed = rSeed;
     self->changedTileIDs = malloc(sizeof(unsigned int) * (xSize*ySize + 1));
     return self;
 }
 void enDestroy(Engine self) {
+    coDestroy(self->context);
     free(self->changedTileIDs);
     free(self);
 }
 
-int enRun(Engine self) {
+void enPrepare(Engine self, int rSeed) {
+    srand(rSeed);
+    coPrepare(self->context, self->bset);
+}
+
+int enRun(Engine self, int rSeed) {
     printf("=== Starting run!\n");
-    enPrepare(self);
+    enPrepare(self, rSeed);
     printf("=== Prepare call complete!\n");
     if (!enRecursiveCoreLoop(self, 10, 1000)) {
         printf("=== Contradiction error - exiting!\n");
@@ -63,12 +68,6 @@ int enRun(Engine self) {
     printf("=== Core loop complete!\n");
     enCleanup(self);
     return 1;
-}
-
-void enPrepare(Engine self) {
-    coPrepare(self->context, self->bset);
-
-    srand(self->rSeed);
 }
 
 static int enCoreLoop(Engine self, int toCollapseThreshold) {
@@ -105,7 +104,7 @@ int enRecursiveCoreLoop(Engine self, int maxContradictions, int checkpointInterv
     int origMaxContradictions = maxContradictions;
 
     while (maxContradictions > 0) {
-        printf("Calling core loop with %d to collapse\n", self->context->toCollapse);
+        printf("Calling core loop with %d to collapse (%d in heap)\n", self->context->toCollapse, self->context->eHeap[0]);
         if (enCoreLoop(self, self->context->toCollapse - checkpointInterval)) {
             if (enRecursiveCoreLoop(self, origMaxContradictions, checkpointInterval)) {
                 coDestroy(backupContext);
@@ -123,7 +122,7 @@ int enRecursiveCoreLoop(Engine self, int maxContradictions, int checkpointInterv
 }
 
 void enCleanup(Engine self) {
-    coDestroy(self->context);
+//    coDestroy(self->context);
 //    enPrint(self);
 }
 
@@ -141,9 +140,25 @@ void enPrint(Engine self) {
     }
 }
 
-static int advance(Engine self) {
-    self->changedTileIDs[0] = 0;
+int enCoerceXY(Engine self, unsigned int x, unsigned int y, char value){
+    return enCoerceTile(self, (y*self->context->xSize)+x, value);
+}
 
+int enCoerceTile(Engine self, unsigned int tID, char value) {
+    Context context = self->context;
+    BlockSet bset = self->bset;
+
+    Bitmask inverseValueMask = bsetInverseValueMask(bset, value);
+
+    bmXor(context->tiles[tID].validBlockMask, inverseValueMask);
+    bmOr(context->tiles[tID].rippleDifference, inverseValueMask);
+
+    bmDestroy(inverseValueMask);
+
+    return initialRippleChangesFrom(self, tID);
+}
+
+static int advance(Engine self) {
 //    printf("In call to advance()!\n");
     Context context = self->context;
     unsigned int tID = 0;
@@ -178,7 +193,21 @@ static int advance(Engine self) {
     tiCollapseTo(self->context, tID, block);
 //    printf(" Done tile collapse!\n");
 
+    if (initialRippleChangesFrom(self, tID)) {
+        return 1;
+    } else {
+//        printf(" Ripple changes failed!\n");
+        return 0;
+    }
+}
+
+
+static int initialRippleChangesFrom(Engine self, unsigned int tID) {
+    self->changedTileIDs[0] = 0;
+    addChangedTile(self, tID);
+
     if (rippleChangesFrom(self, tID)) {
+
 /*        printf(" Finished rippleChangesFrom() - now refreshing freq/entropy values!\n");
         printf(" Got %d changed tiles: ", self->changedTileIDs[0]);
         for (int k = 1; k <= self->changedTileIDs[0]; k++) {
@@ -212,12 +241,145 @@ static int advance(Engine self) {
 
 //        tiRefreshValues(self->context, self->bset, tID);
 //        self->context->tiles[tID].ctIndex = 0;
-
         return 1;
     } else {
 //        printf(" Ripple changes failed!\n");
         return 0;
     }
+}
+
+
+static void addChangedTile(Engine self, unsigned int ctID) {
+//    printf ("      Adding changed tile %d (%d, %d)\n", ctID, xTileID(ctID), yTileID(ctID));
+    if (self->context->tiles[ctID].ctIndex == 0) {
+        self->context->tiles[ctID].ctIndex = self->changedTileIDs[0];
+        self->changedTileIDs[0]++;
+        self->changedTileIDs[self->changedTileIDs[0]] = ctID;
+//        printf ("      Tile %d now in heap at %d\n", ctID, self->context->tiles[ctID].ctIndex);
+    } else {
+//        printf ("      Tile %d was already in heap at %d - not adding\n", ctID, self->context->tiles[ctID].ctIndex);
+    }
+}
+
+static int rippleChangesFrom(Engine self, unsigned int tID) {
+#if DEBUG_BENCH
+    float startTime = clock();
+#endif
+//    printf("   In call to rippleChangesFrom()!\n");
+
+    Context context = self->context;
+    BlockSet bset = self->bset;
+    unsigned int diffBlockIDs[context->tiles[0].validBlockMask->len * FIELD_LEN + 1];
+
+    tile * curTile = NULL;
+    Bitmask curDifference = NULL;
+
+    VisitNode toVisit = malloc(sizeof(struct visitNode));
+    toVisit->tID = tID;
+    toVisit->next = NULL;
+
+    while (toVisit != NULL) {
+        tID = toVisit->tID;
+        curTile = &(context->tiles[tID]);
+        curDifference = curTile->rippleDifference;
+
+        VisitNode oldToVisit = toVisit;
+        toVisit = toVisit->next;
+        free(oldToVisit);
+
+//        printf("   - Visiting tile (%d, %d) with vbm:", xTileID(tID), yTileID(tID));
+//        bmPrint(curTile->validBlockMask);
+//        printf("  (falisty %d)\n", bmFalse(curTile->validBlockMask));
+//        printf("   - Tile also has rippleDiff:");
+//        bmPrint(curDifference);
+//        printf("\n");
+        if (bmFalse(curTile->validBlockMask)) {
+            while (toVisit != NULL) {
+                oldToVisit = toVisit;
+                toVisit = toVisit->next;
+                free(oldToVisit);
+            }
+            return 0;
+        } else {
+            Bitmask nDifference = bmCreate(curDifference->len);
+            Bitmask sDifference = bmCreate(curDifference->len);
+            Bitmask eDifference = bmCreate(curDifference->len);
+            Bitmask wDifference = bmCreate(curDifference->len);
+
+            bmClear(nDifference);
+            bmClear(sDifference);
+            bmClear(eDifference);
+            bmClear(wDifference);
+
+            bmFastCherrypick(curDifference, diffBlockIDs);
+            unsigned int index = diffBlockIDs[0];
+
+//            printf("    Blocks being removed are:");
+//            while (index > 0) {
+//                printf("%d,", diffBlockIDs[index] );
+//                index--;
+//            }
+//            printf("\n");
+
+            index = diffBlockIDs[0];
+
+            while (index > 0) {
+                Block curBlock = bsetLookup(bset, diffBlockIDs[index--]);
+//                printf("   - hitting the segfault, curBlock is %p\n", curBlock);
+
+                bmOr(nDifference, curBlock->overlapMasks[CARD_S]);
+                bmOr(sDifference, curBlock->overlapMasks[CARD_N]);
+                bmOr(eDifference, curBlock->overlapMasks[CARD_W]);
+                bmOr(wDifference, curBlock->overlapMasks[CARD_E]);
+
+                /*
+                printf("   - Block %d had enabled(n):", diffBlockIDs[index+1]);
+                bmPrint(curBlock->overlapMasks[CARD_N]);
+                printf("\n");
+                printf("   - appending to sDifference:");
+                bmPrint(curBlock->overlapMasks[CARD_S]);
+                printf("\n");
+                printf("   - Adjusting eDifference:");
+                bmPrint(eDifference);
+                printf("\n");
+                printf("   - Adjusting wDifference:");
+                bmPrint(wDifference);
+                printf("\n");
+                */
+
+            }
+
+            /*
+            printf("   - Created nDifference:");
+            bmPrint(nDifference);
+            printf("\n");
+            printf("   - Created sDifference:");
+            bmPrint(sDifference);
+            printf("\n");
+            printf("   - Created eDifference:");
+            bmPrint(eDifference);
+            printf("\n");
+            printf("   - Created wDifference:");
+            bmPrint(wDifference);
+            printf("\n");
+            */
+
+            processChildTile(self, tID, CARD_N, nDifference, &toVisit);
+            processChildTile(self, tID, CARD_S, sDifference, &toVisit);
+            processChildTile(self, tID, CARD_E, eDifference, &toVisit);
+            processChildTile(self, tID, CARD_W, wDifference, &toVisit);
+
+            bmDestroy(nDifference);
+            bmDestroy(sDifference);
+            bmDestroy(eDifference);
+            bmDestroy(wDifference);
+        }
+    }
+//    printf("   Leaving call to rippleChangesFrom()!\n");
+#if DEBUG_BENCH
+    bRippleTime += clock() - startTime;
+#endif
+    return 1;
 }
 
 static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask cDifference, VisitNode * toVisit) {
@@ -321,136 +483,5 @@ static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask
 //    bmPrint(cTile->validBlockMask);
 //    printf("\n");
 
-    return 1;
-}
-
-static void addChangedTile(Engine self, unsigned int ctID) {
-//    printf ("      Adding changed tile %d (%d, %d)\n", ctID, xTileID(ctID), yTileID(ctID));
-    if (self->context->tiles[ctID].ctIndex == 0) {
-
-        self->context->tiles[ctID].ctIndex = self->changedTileIDs[0];
-        self->changedTileIDs[0]++;
-        self->changedTileIDs[self->changedTileIDs[0]] = ctID;
-//        printf ("      Tile %d now in heap at %d\n", ctID, self->context->tiles[ctID].ctIndex);
-    } else {
-//        printf ("      Tile %d was already in heap at %d - not adding\n", ctID, self->context->tiles[ctID].ctIndex);
-    }
-}
-
-static int rippleChangesFrom(Engine self, unsigned int tID) {
-#if DEBUG_BENCH
-    float startTime = clock();
-#endif
-//    printf("   In call to rippleChangesFrom()!\n");
-
-    Context context = self->context;
-    BlockSet bset = self->bset;
-    unsigned int diffBlockIDs[context->tiles[0].validBlockMask->len * FIELD_LEN + 1];
-
-    tile * curTile = NULL;
-    Bitmask curDifference = NULL;
-
-    addChangedTile(self, tID);
-
-    VisitNode toVisit = malloc(sizeof(struct visitNode));
-    toVisit->tID = tID;
-    toVisit->next = NULL;
-
-    while (toVisit != NULL) {
-        tID = toVisit->tID;
-        curTile = &(context->tiles[tID]);
-        curDifference = curTile->rippleDifference;
-
-        VisitNode oldToVisit = toVisit;
-        toVisit = toVisit->next;
-        free(oldToVisit);
-
-//        printf("   - Visiting tile (%d, %d) with vbm:", xTileID(tID), yTileID(tID));
-//        bmPrint(curTile->validBlockMask);
-//        printf("  (falisty %d)\n", bmFalse(curTile->validBlockMask));
-//        printf("   - Tile also has rippleDiff:");
-//        bmPrint(curDifference);
-//        printf("\n");
-        if (bmFalse(curTile->validBlockMask)) {
-            return 0;
-        } else {
-            Bitmask nDifference = bmCreate(curDifference->len);
-            Bitmask sDifference = bmCreate(curDifference->len);
-            Bitmask eDifference = bmCreate(curDifference->len);
-            Bitmask wDifference = bmCreate(curDifference->len);
-
-            bmClear(nDifference);
-            bmClear(sDifference);
-            bmClear(eDifference);
-            bmClear(wDifference);
-
-            bmFastCherrypick(curDifference, diffBlockIDs);
-            unsigned int index = diffBlockIDs[0];
-
-//            printf("    Blocks being removed are:");
-//            while (index > 0) {
-//                printf("%d,", diffBlockIDs[index] );
-//                index--;
-//            }
-//            printf("\n");
-
-            index = diffBlockIDs[0];
-
-            while (index > 0) {
-                Block curBlock = bsetLookup(bset, diffBlockIDs[index--]);
-//                printf("   - hitting the segfault, curBlock is %p\n", curBlock);
-
-                bmOr(nDifference, curBlock->overlapMasks[CARD_S]);
-                bmOr(sDifference, curBlock->overlapMasks[CARD_N]);
-                bmOr(eDifference, curBlock->overlapMasks[CARD_W]);
-                bmOr(wDifference, curBlock->overlapMasks[CARD_E]);
-
-                /*
-                printf("   - Block %d had enabled(n):", diffBlockIDs[index+1]);
-                bmPrint(curBlock->overlapMasks[CARD_N]);
-                printf("\n");
-                printf("   - appending to sDifference:");
-                bmPrint(curBlock->overlapMasks[CARD_S]);
-                printf("\n");
-                printf("   - Adjusting eDifference:");
-                bmPrint(eDifference);
-                printf("\n");
-                printf("   - Adjusting wDifference:");
-                bmPrint(wDifference);
-                printf("\n");
-                */
-
-            }
-
-            /*
-            printf("   - Created nDifference:");
-            bmPrint(nDifference);
-            printf("\n");
-            printf("   - Created sDifference:");
-            bmPrint(sDifference);
-            printf("\n");
-            printf("   - Created eDifference:");
-            bmPrint(eDifference);
-            printf("\n");
-            printf("   - Created wDifference:");
-            bmPrint(wDifference);
-            printf("\n");
-            */
-
-            processChildTile(self, tID, CARD_N, nDifference, &toVisit);
-            processChildTile(self, tID, CARD_S, sDifference, &toVisit);
-            processChildTile(self, tID, CARD_E, eDifference, &toVisit);
-            processChildTile(self, tID, CARD_W, wDifference, &toVisit);
-
-            bmDestroy(nDifference);
-            bmDestroy(sDifference);
-            bmDestroy(eDifference);
-            bmDestroy(wDifference);
-        }
-    }
-//    printf("   Leaving call to rippleChangesFrom()!\n");
-#if DEBUG_BENCH
-    bRippleTime += clock() - startTime;
-#endif
     return 1;
 }

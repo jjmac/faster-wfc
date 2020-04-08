@@ -5,6 +5,9 @@ ALLO = bitmasks.o blocks.o blocksets.o tiles.o engine.o grids.o
 wfc: ${ALLO} wfc.o
 	${CC} -o wfc wfc.o ${ALLO} -lm
 
+clean:
+	rm ${ALLO} wfc wfc.so wfc.o
+
 shared: ${ALLO}
 	${CC} -o wfc.so -shared ${ALLO}
 

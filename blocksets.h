@@ -20,4 +20,6 @@ Bitmask bsetFalseMask(BlockSet self);
 
 Bitmask bsetbmCreate(BlockSet self);
 
+Bitmask bsetInverseValueMask(BlockSet self, char value);
+
 int bsetTestSymmetry(BlockSet self);

@@ -406,6 +406,17 @@ Bitmask bsetFalseMask(BlockSet self){
     return bm;
 }
 
+Bitmask bsetInverseValueMask(BlockSet self, char value) {
+    Bitmask bm = bsetFalseMask(self);
+    for (int k = 0; k < self->len; k++) {
+        Block cur = bsetLookup(self, k);
+        if (cur->values[0] != value) {
+            blbmAdd(cur, bm);
+        }
+    }
+    return bm;
+}
+
 int bsetTestSymmetry(BlockSet self) {
     for (int k = 0; k < self->len; k++) {
         Block cur = bsetLookup(self, k);

@@ -153,7 +153,7 @@ void testMemory() {
         bsetAppend(bset, bl);
     }
     bsetLock(bset);
-    en = enCreate(bset, 10, 10, 0);
+    en = enCreate(bset, 10, 10);
     enDestroy(en);
     bsetDestroy(bset);
 
@@ -162,8 +162,8 @@ void testMemory() {
     bset = bsetCreate(2);
     bsetAppend(bset, blCreateFromString(2, "aaaa"));
     bsetLock(bset);
-    en = enCreate(bset, 1, 1, 0);
-    enRun(en);
+    en = enCreate(bset, 1, 1);
+    enRun(en, 0);
     enDestroy(en);
     bsetDestroy(bset);
 
@@ -172,8 +172,8 @@ void testMemory() {
     bset = bsetCreate(2);
     bsetAppend(bset, blCreateFromString(2, "aaaa"));
     bsetLock(bset);
-    en = enCreate(bset, 10, 10, 0);
-    enRun(en);
+    en = enCreate(bset, 10, 10);
+    enRun(en, 0);
     enDestroy(en);
     bsetDestroy(bset);
 
@@ -181,8 +181,8 @@ void testMemory() {
 
     bset = flowers(4);
     bsetLock(bset);
-    en = enCreate(bset, 10, 10, 0);
-    enRun(en);
+    en = enCreate(bset, 10, 10);
+    enRun(en, 0);
     enDestroy(en);
     coDestroy(con);
     bsetDestroy(bset);
@@ -192,8 +192,8 @@ void testMemory() {
 
     bset = flowers(4);
     bsetLock(bset);
-    en = enCreate(bset, 40, 40, 0);
-    enRun(en);
+    en = enCreate(bset, 40, 40);
+    enRun(en, 0);
     enDestroy(en);
     coDestroy(con);
     bsetDestroy(bset);
@@ -211,10 +211,19 @@ int main(int argc, char** argv) {
 
     bsetPrint(bset);
 
-    Engine en = enCreate(bset, 100, 100, 110);
+    Engine en = enCreate(bset, 10, 10);
 
-//    enPrepare(en);
-    if (enRun(en)) {
+
+    enPrepare(en, 0);
+
+    if (!enCoerceXY(en, 2,0, 'g')) {
+        printf("Coercion failure!\n");
+    }
+    if (!enCoerceXY(en, 5,0, 'g')) {
+        printf("Coercion failure!\n");
+    }
+
+    if (enRecursiveCoreLoop(en, 10, 30)) {
         enPrint(en);
     }
 
