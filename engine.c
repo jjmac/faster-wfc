@@ -39,12 +39,12 @@ static int rippleChangesFrom(Engine self, unsigned int tID);
 static int processChildTile(Engine self, unsigned int tID, cardinal dir, Bitmask cDifference, VisitNode * toVisit);
 static void addChangedTile(Engine self, unsigned int ctID);
 
-Engine enCreate(BlockSet bset, Context context, int rSeed) {
+Engine enCreate(BlockSet bset, int xSize, int ySize, int rSeed) {
     Engine self = malloc(sizeof(struct engine));
     self->bset = bset;
-    self->context = context;
+    self->context = coCreate(xSize, ySize);
     self->rSeed = rSeed;
-    self->changedTileIDs = malloc(sizeof(unsigned int) * (context->xSize * context->ySize + 1));
+    self->changedTileIDs = malloc(sizeof(unsigned int) * (xSize*ySize + 1));
     return self;
 }
 void enDestroy(Engine self) {
@@ -123,6 +123,7 @@ int enRecursiveCoreLoop(Engine self, int maxContradictions, int checkpointInterv
 }
 
 void enCleanup(Engine self) {
+    coDestroy(self->context);
 //    enPrint(self);
 }
 

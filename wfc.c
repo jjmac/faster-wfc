@@ -153,10 +153,8 @@ void testMemory() {
         bsetAppend(bset, bl);
     }
     bsetLock(bset);
-    con = coCreate(10, 10);
-    en = enCreate(bset, con, 0);
+    en = enCreate(bset, 10, 10, 0);
     enDestroy(en);
-    coDestroy(con);
     bsetDestroy(bset);
 
     printf("Testing enRun (1 block, 1 tile)\n");
@@ -164,11 +162,9 @@ void testMemory() {
     bset = bsetCreate(2);
     bsetAppend(bset, blCreateFromString(2, "aaaa"));
     bsetLock(bset);
-    con = coCreate(1, 1);
-    en = enCreate(bset, con, 0);
+    en = enCreate(bset, 1, 1, 0);
     enRun(en);
     enDestroy(en);
-    coDestroy(con);
     bsetDestroy(bset);
 
     printf("Testing enRun (one block, 100 tiles)\n");
@@ -176,19 +172,16 @@ void testMemory() {
     bset = bsetCreate(2);
     bsetAppend(bset, blCreateFromString(2, "aaaa"));
     bsetLock(bset);
-    con = coCreate(10, 10);
-    en = enCreate(bset, con, 0);
+    en = enCreate(bset, 10, 10, 0);
     enRun(en);
     enDestroy(en);
-    coDestroy(con);
     bsetDestroy(bset);
 
     printf("Testing enRun (many blocks, 100 tiles)\n");
 
     bset = flowers(4);
     bsetLock(bset);
-    con = coCreate(10, 10);
-    en = enCreate(bset, con, 0);
+    en = enCreate(bset, 10, 10, 0);
     enRun(en);
     enDestroy(en);
     coDestroy(con);
@@ -199,8 +192,7 @@ void testMemory() {
 
     bset = flowers(4);
     bsetLock(bset);
-    con = coCreate(40, 40);
-    en = enCreate(bset, con, 0);
+    en = enCreate(bset, 40, 40, 0);
     enRun(en);
     enDestroy(en);
     coDestroy(con);
@@ -219,8 +211,7 @@ int main(int argc, char** argv) {
 
     bsetPrint(bset);
 
-    Context con = coCreate( 100, 100 );
-    Engine en = enCreate(bset, con, 110);
+    Engine en = enCreate(bset, 100, 100, 110);
 
 //    enPrepare(en);
     if (enRun(en)) {
