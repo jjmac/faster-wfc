@@ -6,6 +6,7 @@ void bsetDestroy(BlockSet self);
 void bsetPrint(BlockSet self);
 
 void bsetAppend(BlockSet self, Block block);
+void bsetAppendFromString(BlockSet self, char * str);
 
 void bsetLock(BlockSet self);
 

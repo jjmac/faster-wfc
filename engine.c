@@ -58,14 +58,14 @@ void enPrepare(Engine self, int rSeed) {
 }
 
 int enRun(Engine self, int rSeed) {
-    printf("=== Starting run!\n");
+//    printf("=== Starting run!\n");
     enPrepare(self, rSeed);
-    printf("=== Prepare call complete!\n");
+//    printf("=== Prepare call complete!\n");
     if (!enRecursiveCoreLoop(self, 10, 1000)) {
         printf("=== Contradiction error - exiting!\n");
         return 0;
     }
-    printf("=== Core loop complete!\n");
+//    printf("=== Core loop complete!\n");
     enCleanup(self);
     return 1;
 }
@@ -104,7 +104,7 @@ int enRecursiveCoreLoop(Engine self, int maxContradictions, int checkpointInterv
     int origMaxContradictions = maxContradictions;
 
     while (maxContradictions > 0) {
-        printf("Calling core loop with %d to collapse (%d in heap)\n", self->context->toCollapse, self->context->eHeap[0]);
+//        printf("Calling core loop with %d to collapse (%d in heap)\n", self->context->toCollapse, self->context->eHeap[0]);
         if (enCoreLoop(self, self->context->toCollapse - checkpointInterval)) {
             if (enRecursiveCoreLoop(self, origMaxContradictions, checkpointInterval)) {
                 coDestroy(backupContext);
@@ -114,7 +114,7 @@ int enRecursiveCoreLoop(Engine self, int maxContradictions, int checkpointInterv
         maxContradictions--;
 //        printf("State is:\n");
 //        enPrint(self);
-        printf("Contradiction error: %d attempts left (toCollapse is %d)\n", maxContradictions, self->context->toCollapse);
+//        printf("Contradiction error: %d attempts left (toCollapse is %d)\n", maxContradictions, self->context->toCollapse);
         coDestroy(self->context);
         self->context = coCopy(backupContext);
     }

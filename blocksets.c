@@ -233,6 +233,20 @@ void bsetAppend(BlockSet self, Block block) {
     self->len += 1;
 }
 
+void bsetAppendFromString(BlockSet self, char * str) {
+    assert(!self->locked);
+
+    BlockListNode cur = self->blockList;
+    while (cur != NULL) {
+        if (strncmp(cur->value->values, str, (self->size*self->size)) == 0) {
+            cur->value->freq++;
+            return;
+        }
+        cur = cur->next;
+    }
+    bsetAppend(self, blCreateFromString(self->size, str));
+}
+
 void bsetLock(BlockSet self) {
     assert(!self->locked);
     assert(self->len > 0);
