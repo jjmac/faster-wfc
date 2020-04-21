@@ -206,25 +206,21 @@ int main(int argc, char** argv) {
 //    return 0;
 
     BlockSet bset = flowers(3);
-
     bsetLock(bset);
-
-    bsetPrint(bset);
 
     Engine en = enCreate(bset, 10, 10);
 
+    if(enPrepare(en, 0)) {
+        if (!enCoerceXY(en, 2,0, 'g')) {
+            printf("Coercion failure!\n");
+        }
+        if (!enCoerceXY(en, 5,0, 'g')) {
+            printf("Coercion failure!\n");
+        }
 
-    enPrepare(en, 0);
-
-    if (!enCoerceXY(en, 2,0, 'g')) {
-        printf("Coercion failure!\n");
-    }
-    if (!enCoerceXY(en, 5,0, 'g')) {
-        printf("Coercion failure!\n");
-    }
-
-    if (enRecursiveCoreLoop(en, 10, 30)) {
-        enPrint(en);
+        if (enRecursiveCoreLoop(en, 10, 30)) {
+            enPrint(en);
+        }
     }
 
     enDestroy(en);
@@ -234,6 +230,25 @@ int main(int argc, char** argv) {
     benchprint();
 #endif
     return 0;
+}
+
+void testUnplacable() {
+    BlockSet bset = bsetCreate(3);
+    bsetAppendFromString(bset, "aaab.....");
+    bsetAppendFromString(bset, "b.....ccc");
+
+    bsetLock(bset);
+
+    bsetPrint(bset);
+
+    Engine en = enCreate(bset, 1, 3);
+    if (enPrepare(en, 2)) {
+        if (enRecursiveCoreLoop(en, 10, 30)) {
+            enPrint(en);
+        }
+    }
+    enDestroy(en);
+    bsetDestroy(bset);
 }
 
 BlockSet bsDefault1() {

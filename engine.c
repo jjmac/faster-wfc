@@ -52,14 +52,16 @@ void enDestroy(Engine self) {
     free(self);
 }
 
-void enPrepare(Engine self, int rSeed) {
+int enPrepare(Engine self, int rSeed) {
     srand(rSeed);
-    coPrepare(self->context, self->bset);
+    return coPrepare(self->context, self->bset);
 }
 
 int enRun(Engine self, int rSeed) {
 //    printf("=== Starting run!\n");
-    enPrepare(self, rSeed);
+    if (!enPrepare(self, rSeed)) {
+        return 0;
+    }
 //    printf("=== Prepare call complete!\n");
     if (!enRecursiveCoreLoop(self, 10, 1000)) {
         printf("=== Contradiction error - exiting!\n");
@@ -126,6 +128,14 @@ void enCleanup(Engine self) {
 //    enPrint(self);
 }
 
+void enWriteToBuffer(Engine self, char * buffer) {
+    Context context = self->context;
+    BlockSet bset = self->bset;
+    for (unsigned int tID = 0; tID < context->xSize*context->ySize; tID++) {
+        buffer[tID] = bsetBlockToValue(bset, context->tiles[tID].validBlockMask);
+    }
+}
+
 void enPrint(Engine self) {
     Context context = self->context;
     BlockSet bset = self->bset;
@@ -162,6 +172,10 @@ static int advance(Engine self) {
 //    printf("In call to advance()!\n");
     Context context = self->context;
     unsigned int tID = 0;
+
+/*    printf("Heap is:\n");
+    coHeapPrint(self->context);
+    printf("\n");*/
 
     // pick a tile to collapse
     if (self->context->eHeap[0] > 0) {
@@ -208,7 +222,8 @@ static int initialRippleChangesFrom(Engine self, unsigned int tID) {
 
     if (rippleChangesFrom(self, tID)) {
 
-/*        printf(" Finished rippleChangesFrom() - now refreshing freq/entropy values!\n");
+/*
+        printf(" Finished rippleChangesFrom() - now refreshing freq/entropy values!\n");
         printf(" Got %d changed tiles: ", self->changedTileIDs[0]);
         for (int k = 1; k <= self->changedTileIDs[0]; k++) {
             printf("%d, ", self->changedTileIDs[k]);
@@ -287,12 +302,13 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
         toVisit = toVisit->next;
         free(oldToVisit);
 
-//        printf("   - Visiting tile (%d, %d) with vbm:", xTileID(tID), yTileID(tID));
-//        bmPrint(curTile->validBlockMask);
-//        printf("  (falisty %d)\n", bmFalse(curTile->validBlockMask));
-//        printf("   - Tile also has rippleDiff:");
-//        bmPrint(curDifference);
-//        printf("\n");
+/*        printf("   - Visiting tile (%d, %d) with vbm:", xTileID(tID), yTileID(tID));
+        bmPrint(curTile->validBlockMask);
+        printf("  (falisty %d)\n", bmFalse(curTile->validBlockMask));
+        printf("   - Tile also has rippleDiff:");
+        bmPrint(curDifference);
+        printf("\n");
+        */
         if (bmFalse(curTile->validBlockMask)) {
             while (toVisit != NULL) {
                 oldToVisit = toVisit;
@@ -314,14 +330,15 @@ static int rippleChangesFrom(Engine self, unsigned int tID) {
             bmFastCherrypick(curDifference, diffBlockIDs);
             unsigned int index = diffBlockIDs[0];
 
-//            printf("    Blocks being removed are:");
-//            while (index > 0) {
-//                printf("%d,", diffBlockIDs[index] );
-//                index--;
-//            }
-//            printf("\n");
-
+            /*
+            printf("    Blocks being removed are:");
+            while (index > 0) {
+                printf("%d,", diffBlockIDs[index] );
+                index--;
+            }
+            printf("\n");
             index = diffBlockIDs[0];
+            */
 
             while (index > 0) {
                 Block curBlock = bsetLookup(bset, diffBlockIDs[index--]);

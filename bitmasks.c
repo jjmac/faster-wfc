@@ -94,6 +94,12 @@ void bmXor(Bitmask self, Bitmask other) {
         self->fields[k] ^= other->fields[k];
     }
 }
+void bmSub(Bitmask self, Bitmask other) {
+    assert(self->len == other->len);
+    for(int k = self->len - 1; k >= 0; k--) {
+        self->fields[k] &= ~other->fields[k];
+    }
+}
 
 int bmAndValue(Bitmask self, Bitmask other) {
     assert(self->len == other->len);

@@ -22,6 +22,7 @@ void bmCopy(Bitmask self, Bitmask other);
 void bmAnd(Bitmask self, Bitmask other);
 void bmOr(Bitmask self, Bitmask other);
 void bmXor(Bitmask self, Bitmask other);
+void bmSub(Bitmask self, Bitmask other);
 
 int bmAndValue(Bitmask self, Bitmask other);
 int bmXorValue(Bitmask self, Bitmask other);

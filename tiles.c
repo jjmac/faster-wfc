@@ -13,6 +13,9 @@
 
 #define CHECK_HEAPS 0
 
+#define xTileID(tID) (tID % self->xSize)
+#define yTileID(tID) (tID / self->xSize)
+
 float bHeapPushTime = 0;
 float bHeapRemoveTime = 0;
 float bHeapRefreshTime = 0;
@@ -46,17 +49,55 @@ void coDestroy(Context self) {
     free(self->eHeap);
     free(self);
 }
-void coPrepare(Context self, BlockSet bset) {
+
+int coPrepare(Context self, BlockSet bset) {
+    int contradicted = 0;
+
     self->prepared = 1;
 
     self->eHeap[0] = 0;
     self->toCollapse = self->xSize*self->ySize;
     for (unsigned int tID = self->toCollapse-1; tID != -1; tID--) {
-        self->tiles[tID].validBlockMask = bsetTrueMask(bset);
+        int tileDirs = ALL_CARDS;
+        if (yTileID(tID) == 0) {
+            tileDirs ^= cardBit(CARD_S);
+        }
+        if (yTileID(tID) == self->ySize-1){
+            tileDirs ^= cardBit(CARD_N);
+        }
+        if (xTileID(tID) == 0) {
+            tileDirs ^= cardBit(CARD_E);
+        }
+        if (xTileID(tID) == self->xSize-1){
+            tileDirs ^= cardBit(CARD_W);
+        }
+
+        self->tiles[tID].validBlockMask = bsetPlacableMask(bset, tileDirs);
         self->tiles[tID].rippleDifference = bsetFalseMask(bset);
         self->tiles[tID].ctIndex = 0;
         self->tiles[tID].heapIndex = 0;
+
+        /*
+        printf("tID, %d, (%d, %d) has tileDirs %d | vbm:", tID, xTileID(tID), yTileID(tID), tileDirs);
+        bmPrint(self->tiles[tID].validBlockMask);
+        printf("\n");
+        */
+
+        if (bmFalse(self->tiles[tID].validBlockMask)) {
+            contradicted = 1;
+        }
+
         tiRefreshValues(self, bset, tID);
+        if (self->tiles[tID].entropy <= 0) {
+            self->toCollapse--;
+        }
+    }
+
+    if (contradicted) {
+        printf("Incomplete or contradicted blockset - no valid tiling possible!\n");
+        return 0;
+    } else {
+        return 1;
     }
 }
 
@@ -161,6 +202,7 @@ unsigned int coHeapPop(Context self) {
     heapSanityCheck(self);
 
     self->tiles[retVal].heapIndex = 0;
+
     return retVal;
 }
 

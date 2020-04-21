@@ -27,7 +27,7 @@ struct blockSet {
     unsigned char size;
     unsigned int len;
 
-    Bitmask allTrueMask;
+    Bitmask placableMasks[16];
     Block * blocks;
     BlockListNode blockList;
 };
@@ -187,7 +187,9 @@ static void bsetDestroyLocked(BlockSet self) {
         bmDestroy(self->blocks[k]->overlapMasks[CARD_W]);
         blDestroy(self->blocks[k]);
     }
-    bmDestroy(self->allTrueMask);
+    for (int k = NO_CARDS; k <= ALL_CARDS; k++) {
+        bmDestroy(self->placableMasks[k]);
+    }
     free(self->blocks);
 }
 
@@ -208,6 +210,11 @@ static void bsetPrintLocked(BlockSet self) {
         #if DPRINT_LOCKED_DATA
             blPrintData(curBlock);
         #endif
+        printf("\n");
+    }
+    for (int k = NO_CARDS; k <= ALL_CARDS; k++) {
+        printf("For cardtile set %x:", k);
+        bmPrint(self->placableMasks[k]);
         printf("\n");
     }
 
@@ -259,8 +266,11 @@ void bsetLock(BlockSet self) {
     Block curBlock, innerBlock;
 
     unsigned char numFields = ((self->len-1) / FIELD_LEN) + 1;
-    self->allTrueMask = bmCreate(numFields);
-    bmClear(self->allTrueMask);
+
+    for (int k = NO_CARDS; k <= ALL_CARDS; k++) {
+        self->placableMasks[k] = bmCreate(numFields);
+        bmClear(self->placableMasks[k]);
+    }
 
     while (self->blockList != NULL) {
         curBlock = self->blockList->value;
@@ -274,8 +284,6 @@ void bsetLock(BlockSet self) {
 //        printf("Shifted is %llu | mask:", curBlock->localMask);
 //        bmFieldPrint(curBlock->localMask);
 //        printf("\n");
-
-        blbmAdd(curBlock, self->allTrueMask);
 
         curBlock->overlapMasks[CARD_N] = bmCreate(numFields);
         curBlock->overlapMasks[CARD_S] = bmCreate(numFields);
@@ -312,6 +320,26 @@ void bsetLock(BlockSet self) {
         BlockListNode oldNode = self->blockList;
         self->blockList = self->blockList->next;
         free(oldNode);
+    }
+
+    for (unsigned int index = self->len-1; index != -1 ; index--) {
+        curBlock = self->blocks[index];
+
+        for (unsigned int k = NO_CARDS; k <= ALL_CARDS; k++) {
+            unsigned int card;
+            for (card = 0; card < 4; card++) {
+                if (cardBit(card) & k) {
+                    if (bmFalse(curBlock->overlapMasks[card])) {
+                        break;
+                    }
+                }
+            }
+            if (card == 4) {
+                blbmAdd(curBlock, self->placableMasks[k]);
+            }
+        }
+
+
     }
 }
 
@@ -412,12 +440,15 @@ char bsetBlockToValue(BlockSet self, Bitmask bm){
 }
 
 Bitmask bsetTrueMask(BlockSet self){
-    return nbmCopy(self->allTrueMask);
+    return nbmCopy(self->placableMasks[NO_CARDS]);
 }
 Bitmask bsetFalseMask(BlockSet self){
     Bitmask bm = bmCreate( ((self->len-1) / FIELD_LEN) + 1 );
     bmClear(bm);
     return bm;
+}
+Bitmask bsetPlacableMask(BlockSet self, int tileDirs){
+    return nbmCopy(self->placableMasks[tileDirs]);
 }
 
 Bitmask bsetInverseValueMask(BlockSet self, char value) {

@@ -18,6 +18,7 @@ char bsetBlockToValue(BlockSet self, Bitmask bm);
 
 Bitmask bsetTrueMask(BlockSet self);
 Bitmask bsetFalseMask(BlockSet self);
+Bitmask bsetPlacableMask(BlockSet self, int tileDirs);
 
 Bitmask bsetbmCreate(BlockSet self);
 
