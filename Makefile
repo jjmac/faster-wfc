@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -c -fPIC -lm
+CFLAGS = -Wall -c -fPIC -lm -O3
 ALLO = bitmasks.o blocks.o blocksets.o tiles.o engine.o grids.o
 
 wfc: ${ALLO} wfc.o
@@ -9,7 +9,7 @@ clean:
 	rm ${ALLO} wfc wfc.so wfc.o
 
 shared: ${ALLO}
-	${CC} -o wfc.so -shared ${ALLO}
+	${CC} -o wfc.so -O3 -shared ${ALLO}
 
 wfc.o: wfc.c cardinals.h grids.h bitmasks.h blocks.h blocksets.h tiles.h engine.h benchmarking.h
 	${CC} ${CFLAGS} wfc.c

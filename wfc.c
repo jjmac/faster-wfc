@@ -16,6 +16,8 @@ BlockSet redMaze();
 BlockSet flowers(int size);
 BlockSet corid(int size);
 
+void testUnplacable();
+
 extern float bCoreLoopTime;
 extern float bRippleTime;
 extern float bHeapPushTime;
@@ -205,6 +207,9 @@ int main(int argc, char** argv) {
 //    testMemory();
 //    return 0;
 
+//    testUnplacable();
+//    return 0;
+
     BlockSet bset = flowers(3);
     bsetLock(bset);
 
@@ -234,15 +239,16 @@ int main(int argc, char** argv) {
 
 void testUnplacable() {
     BlockSet bset = bsetCreate(3);
-    bsetAppendFromString(bset, "aaab.....");
-    bsetAppendFromString(bset, "b.....ccc");
+    bsetAppendFromString(bset, "aaa......");
+    bsetAppendFromString(bset, "......aaa");
+    bsetAppendFromString(bset, ".........");
 
     bsetLock(bset);
 
     bsetPrint(bset);
 
-    Engine en = enCreate(bset, 1, 3);
-    if (enPrepare(en, 2)) {
+    Engine en = enCreate(bset, 1, 4);
+    if (enPrepare(en, 12)) {
         if (enRecursiveCoreLoop(en, 10, 30)) {
             enPrint(en);
         }

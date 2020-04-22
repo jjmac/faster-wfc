@@ -7,6 +7,7 @@ void bsetPrint(BlockSet self);
 
 void bsetAppend(BlockSet self, Block block);
 void bsetAppendFromString(BlockSet self, char * str);
+void bsetAppendFromGrid(BlockSet self, Grid grid, int rotations, int reflections);
 
 void bsetLock(BlockSet self);
 

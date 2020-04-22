@@ -59,15 +59,10 @@ enum transform {
     INVALID_TRANSFORM
 };
 
-BlockSet bsetCreateFromGrid(Grid grid, unsigned char size, int rotations, int reflections) {
-    BlockSet self = bsetCreate(size);
-
+void bsetAppendFromGrid(BlockSet self, Grid grid, int rotations, int reflections) {
     unsigned int xSize = grid->xSize;
     unsigned int ySize = grid->ySize;
-
-    char * allStrs[xSize * ySize * 8];
-    int freqs[xSize * ySize * 8];
-    int len = 0;
+    unsigned char size = self->size;
 
     enum transform curTransform;
 
@@ -110,16 +105,8 @@ BlockSet bsetCreateFromGrid(Grid grid, unsigned char size, int rotations, int re
                     }
                 }
 
-                for (int k = 0; k < len; k++) {
-                    if (strncmp(curStr, allStrs[k], (size*size)) == 0) {
-                        freqs[k]++;
-                        free(curStr);
-                        goto out;
-                    }
-                }
-                freqs[len] = 1;
-                allStrs[len++] = curStr;
-                out:
+                bsetAppendFromString(self, curStr);
+
                 switch(curTransform) {
                     case IN_PLACE:
                         if (rotations){
@@ -150,13 +137,11 @@ BlockSet bsetCreateFromGrid(Grid grid, unsigned char size, int rotations, int re
             }
         }
     }
+}
 
-    for (int k = 0; k < len; k++) {
-        Block block = blCreateFromString( size, allStrs[k] );
-        block->freq = freqs[k];
-        bsetAppend(self, block);
-        free(allStrs[k]);
-    }
+BlockSet bsetCreateFromGrid(Grid grid, unsigned char size, int rotations, int reflections) {
+    BlockSet self = bsetCreate(size);
+    bsetAppendFromGrid(self, grid, rotations, reflections);
 
     return self;
 }
