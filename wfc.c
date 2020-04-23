@@ -213,15 +213,26 @@ int main(int argc, char** argv) {
     BlockSet bset = flowers(3);
     bsetLock(bset);
 
-    Engine en = enCreate(bset, 10, 10);
+    Engine en = enCreate(bset, 30, 30);
 
     if(enPrepare(en, 0)) {
-        if (!enCoerceXY(en, 2,0, 'g')) {
+/*        if (!enCoerceXY(en, 2,0, 'g')) {
             printf("Coercion failure!\n");
         }
         if (!enCoerceXY(en, 5,0, 'g')) {
             printf("Coercion failure!\n");
-        }
+        }*/
+
+        enIgnoreXY(en, 2, 9);
+        enIgnoreXY(en, 3, 9);
+        enIgnoreXY(en, 4, 9);
+        enIgnoreXY(en, 5, 9);
+        enIgnoreXY(en, 6, 9);
+        enIgnoreXY(en, 7, 9);
+        enIgnoreXY(en, 8, 9);
+        enIgnoreXY(en, 9, 9);
+        enIgnoreXY(en, 10, 9);
+        enIgnoreXY(en, 11, 9);
 
         if (enRecursiveCoreLoop(en, 10, 30)) {
             enPrint(en);

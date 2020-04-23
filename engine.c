@@ -150,6 +150,22 @@ void enPrint(Engine self) {
     }
 }
 
+void enIgnoreXY(Engine self, unsigned int x, unsigned int y){
+    enIgnoreTile(self, (y*self->context->xSize)+x);
+}
+
+void enIgnoreTile(Engine self, unsigned int tID) {
+    Context context = self->context;
+
+    bmClear(context->tiles[tID].validBlockMask);
+    if (context->tiles[tID].heapIndex != 0) {
+        coHeapRemove(context, tID);
+        context->tiles[tID].heapIndex = 0;
+    }
+    context->toCollapse--;
+}
+
+
 int enCoerceXY(Engine self, unsigned int x, unsigned int y, char value){
     return enCoerceTile(self, (y*self->context->xSize)+x, value);
 }
@@ -191,7 +207,7 @@ static int advance(Engine self) {
         assert(0);
     }
 
-//    printf(" Got random tID: %d\n", tID);
+//    printf(" Got random tID: %d (%d, %d)\n", tID, xTileID(tID), yTileID(tID));
 
 //    printf(" Tile blockmask is %p, freq %d\n", self->context->tiles[tID].validBlockMask, self->context->tiles[tID].freq);
 

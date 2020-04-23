@@ -345,10 +345,10 @@ Block bsetRandom(BlockSet self, Bitmask mask, int roll){
 
 //    printf("cherrypickValues is:");
 
-//    for (int k = cherrypickValues[0]; k > 0; k--) {
-//        printf("%d,", cherrypickValues[k]);
-//    }
-//    printf("\n");
+/*    for (int k = cherrypickValues[0]; k > 0; k--) {
+        printf("%d,", cherrypickValues[k]);
+    }
+    printf("\n");*/
     for (int k = cherrypickValues[0]; k > 0; k--) {
         Block block = self->blocks[cherrypickValues[k]];
 //        printf("   Got block w/freq %d!\n", block->freq);
